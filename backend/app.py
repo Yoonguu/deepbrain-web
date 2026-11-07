@@ -5,13 +5,14 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 import numpy as np
 import SimpleITK as sitk
-from fastapi import FastAPI, Request, HTTPException, Depends
+from fastapi import FastAPI, Request, HTTPException, Depends, Path as Path_
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, Field
 from . import store
 from typing import Annotated
-from .algorithms import RigidRegistration, RegistrationParams, ConfidenceConnectedSegmentation, HessianVesselness, DiceEvaluator
-from .algorithms import classic, c2amorph
+from .algorithms import RigidRegistration, RegistrationParams, ConfidenceConnectedSegmentation, HessianVesselness, SegmentationEvaluator
+from .algorithms import classic, dl_models
+from .algorithms.evaluation import METRICS
 
 @asynccontextmanager
 async def lifespan(app):
@@ -224,6 +225,7 @@ class Operation(BaseModel):
  contour_iterations:int=Field(300,ge=1,le=5000)
  start:int=Field(0,ge=0); end:int=Field(10,ge=0)
  lower:float=0; upper:float=100
+ model_id:str=Field('lfcamorph-oasis',max_length=64)
 
 def put_job(j,u):
  with store.connect() as c: c.execute('INSERT OR REPLACE INTO jobs VALUES(?,?,?)',(j['job_id'],u['department'],json.dumps(j)))
@@ -234,10 +236,11 @@ def job(jid:str,u=Depends(approved)):
  return json.loads(row['payload'])
 @app.post('/api/{kind}')
 def run(kind:str,p:Operation,u=Depends(approved)):
- pair=('registration','deformable','c2amorph')
+ pair=('registration','deformable','deep-learning')
  if kind not in pair+('vessel','region-growing','mip','threshold','active-contour','interpolate'): fail(404,'지원되지 않는 기능입니다.')
- if kind=='c2amorph':
-  st=c2amorph.status()
+ if kind=='deep-learning':
+  if p.model_id not in dl_models.MODELS: fail(400,'등록되지 않은 모델입니다.')
+  st=dl_models.status(p.model_id)
   if not st['available']: fail(503,st['reason'])
  base=p.fixed_id if kind in pair else p.image_id
  inp=path_for(base,u); moving=path_for(p.moving_id,u) if kind in pair else None
@@ -249,7 +252,7 @@ def run(kind:str,p:Operation,u=Depends(approved)):
    j['status']='running'; progress(.05,'처리 중')
    if kind=='registration': result=RigidRegistration(RegistrationParams(metric=p.metric,iterations_per_level=p.iterations_per_level)).run(inp,moving,out,IMAGES/(fid+'.tfm'),progress)
    elif kind=='deformable': result=classic.deformable_registration(inp,moving,out,IMAGES/(fid+'.tfm'),p.iterations_per_level,progress)
-   elif kind=='c2amorph': result=c2amorph.C2AMorph().predict(inp,moving,out,IMAGES/(fid+'.field.nii.gz'),progress)
+   elif kind=='deep-learning': result=dl_models.DeepLearningRegistration(p.model_id).predict(inp,moving,out,IMAGES/(fid+'.field.nii.gz'),progress)
    elif kind=='vessel': result=HessianVesselness(p.sigma,p.alpha1,p.alpha2).run(inp,out,progress)
    elif kind=='region-growing': result=ConfidenceConnectedSegmentation(p.multiplier,p.iterations,p.radius).run(inp,p.seeds_ras_mm,out,progress)
    else:
@@ -262,7 +265,7 @@ def run(kind:str,p:Operation,u=Depends(approved)):
     else: image,result=classic.interpolate_axial_mask(image)
     sitk.WriteImage(image,str(out))
    file_for(base,u)
-   meta=add_file(fid,u,kind+' 결과','result',base); result.update(base_id=base,result_id=fid,**meta)
+   meta=add_file(fid,u,(f'deep-learning({p.model_id})' if kind=='deep-learning' else kind)+' 결과','result',base); result.update(base_id=base,result_id=fid,**meta)
    j.update(status='done',result=result,progress=1,message='완료')
   except Exception as exc:
    logging.exception('Processing failed')
@@ -288,15 +291,37 @@ def measure(p:Measure,u=Depends(approved)):
  vals=arr[roi]; result.update(roi_shape='sphere',roi_radius_mm=p.radius,roi_mean=float(vals.mean()),roi_std=float(vals.std()),roi_volume_mm3=float(roi.sum()*sx*sy*sz),nonzero_volume_mm3=float(np.count_nonzero(arr)*sx*sy*sz))
  return result
 
-@app.post('/api/tools/dice')
-def dice(p:Operation,u=Depends(approved)):
- a=sitk.ReadImage(str(path_for(p.fixed_id,u))); b=sitk.ReadImage(str(path_for(p.moving_id,u)))
+def distance_transform(target_zero,spacing):
+ """target_zero가 0인 voxel까지의 Euclidean 거리(mm). scipy가 있으면 exact EDT, 없으면 SimpleITK Maurer."""
+ try:
+  from scipy import ndimage
+  return ndimage.distance_transform_edt(target_zero,sampling=spacing)
+ except ImportError:
+  obj=~target_zero; img=sitk.GetImageFromArray(obj.astype(np.uint8)); img.SetSpacing(tuple(float(v) for v in spacing[::-1]))
+  d=sitk.GetArrayFromImage(sitk.SignedMaurerDistanceMap(img,insideIsPositive=False,squaredDistance=False,useImageSpacing=True))
+  d[obj]=0; return np.maximum(d,0)
+class Evaluation(BaseModel):
+ prediction_id:str; reference_id:str
+ metrics:list[str]=Field(default_factory=lambda:['dice'],min_length=1,max_length=5)
+def evaluate_pair(pred_id,ref_id,metrics,u):
+ if any(m not in METRICS for m in metrics): fail(400,'지원 지표는 Dice, HD, HD95, ASD, ASSD입니다.')
+ a=sitk.ReadImage(str(path_for(pred_id,u))); b=sitk.ReadImage(str(path_for(ref_id,u)))
  if a.GetSize()!=b.GetSize() or not np.allclose(a.GetSpacing(),b.GetSpacing()) or not np.allclose(a.GetOrigin(),b.GetOrigin()) or not np.allclose(a.GetDirection(),b.GetDirection()): fail(400,'두 Mask의 크기와 좌표계가 같아야 합니다.')
  x=sitk.GetArrayFromImage(a);y=sitk.GetArrayFromImage(b)
  labelled=all(np.issubdtype(v.dtype,np.integer) for v in (x,y)) and len(np.union1d(np.unique(x),np.unique(y)))<=256
  if not labelled: x,y=(x>0).astype(np.uint8),(y>0).astype(np.uint8)
- r=DiceEvaluator().evaluate(x,y)
- return {'dice':r['dice_mean'] if labelled and r['dice_mean'] is not None else r['dice_foreground'],'mode':'label' if labelled else 'binary',**r}
+ try: r=SegmentationEvaluator(distance_transform).evaluate(x,y,metrics,spacing=tuple(a.GetSpacing())[::-1])
+ except ValueError as e: fail(400,str(e))
+ return {'mode':'label' if labelled else 'binary','prediction_id':pred_id,'reference_id':ref_id,**r}
+@app.post('/api/tools/evaluate')
+def evaluate(p:Evaluation,u=Depends(approved)):
+ return evaluate_pair(p.prediction_id,p.reference_id,p.metrics,u)
+@app.post('/api/tools/dice')
+def dice(p:Operation,u=Depends(approved)):
+ """v7 호환 경로. moving을 예측, fixed를 기준으로 Dice만 계산한다."""
+ r=evaluate_pair(p.moving_id,p.fixed_id,['dice'],u)
+ s=r['summary']['dice']['mean'] if r['mode']=='label' else r['foreground']['dice']
+ return {'dice':1.0 if s is None else s,**r}
 
 @app.get('/api/transforms/{fid}.tfm')
 def transform_file(fid:str,u=Depends(approved)):
@@ -308,9 +333,9 @@ def field_file(fid:str,u=Depends(approved)):
  file_for(fid,u); path=IMAGES/(fid+'.field.nii.gz')
  if not path.is_file(): fail(404,'이 결과에는 변형장 파일이 없습니다.')
  return FileResponse(path,media_type='application/gzip',filename='displacement_field.nii.gz')
-@app.get('/api/c2amorph/status')
-def c2amorph_status(u=Depends(approved)):
- return c2amorph.status()
+@app.get('/api/dl/models')
+def dl_catalog(u=Depends(approved)):
+ return dl_models.catalog()
 @app.get('/api/images/{fid}/axial')
 def axial_info(fid:str,u=Depends(approved)):
  return classic.axial_axis_info(sitk.ReadImage(str(path_for(fid,u))))
@@ -320,13 +345,15 @@ def jobs(u=Depends(approved)):
  with store.connect() as c:
   return [json.loads(r['payload']) for r in c.execute('SELECT payload FROM jobs WHERE department=? ORDER BY rowid DESC LIMIT 100',(u['department'],))]
 
-ICON_IDS=set(('icon-'+g+'-'+n) for g,names in {'view':'mpr 3d crosshair wl panzoom layout enlarge reset','reg':'rigid deformable overlay c2amorph','seg':'vessel seed region threshold contour draw interp dice','tool':'point distance angle roi mip modality','cmp':'load slice wl panzoom'}.items() for n in names.split())
+ICON_IDS=set(('icon-'+g+'-'+n) for g,names in {'view':'mpr 3d crosshair wl panzoom layout enlarge reset','reg':'rigid deformable overlay dl eval','seg':'vessel seed region threshold contour draw interp eval','tool':'point distance angle roi mip modality contrast colormap','cmp':'load slice wl panzoom'}.items() for n in names.split())
 with store.connect() as c:
  c.execute('CREATE TABLE IF NOT EXISTS preferences(user_id TEXT PRIMARY KEY REFERENCES users(id),pinned TEXT NOT NULL DEFAULT \'[]\',usage TEXT NOT NULL DEFAULT \'{}\')')
 @app.get('/api/preferences')
 def preferences(u=Depends(approved)):
  with store.connect() as c:r=c.execute('SELECT pinned,usage FROM preferences WHERE user_id=?',(u['id'],)).fetchone()
- return {'pinned':json.loads(r['pinned']) if r else [],'usage':json.loads(r['usage']) if r else {}}
+ pinned=[i for i in (json.loads(r['pinned']) if r else []) if i in ICON_IDS]
+ usage={k:v for k,v in (json.loads(r['usage']) if r else {}).items() if k in ICON_IDS}
+ return {'pinned':pinned,'usage':usage}
 class Pins(BaseModel): pinned:list[str]=Field(max_length=6)
 @app.put('/api/preferences/pinned')
 def pins(p:Pins,u=Depends(approved)):
@@ -354,3 +381,29 @@ def preview(filename:str,u=Depends(approved)):
  path=FRONT/'previews'/filename
  if not path.is_file():fail(404,'예시 준비 중')
  return FileResponse(path)
+
+with store.connect() as c:
+ c.execute('CREATE TABLE IF NOT EXISTS colormap_presets(user_id TEXT NOT NULL REFERENCES users(id),name TEXT NOT NULL,body TEXT NOT NULL,PRIMARY KEY(user_id,name))')
+Rgba=Annotated[list[Annotated[int,Field(ge=0,le=255)]],Field(min_length=4,max_length=4)]
+class ColorPoint(BaseModel):
+ position:float=Field(ge=0,le=1); left:Rgba; right:Rgba; style:str=Field('regular',pattern='^(regular|two-sided)$')
+class ColorMapPreset(BaseModel):
+ points:list[ColorPoint]=Field(min_length=2,max_length=64); nan:Rgba=Field(default_factory=lambda:[0,0,0,0])
+PRESET_NAME=r'^[^/\\]{1,40}$'
+@app.get('/api/preferences/colormaps')
+def colormap_presets(u=Depends(approved)):
+ with store.connect() as c: return {r['name']:json.loads(r['body']) for r in c.execute('SELECT name,body FROM colormap_presets WHERE user_id=? ORDER BY name',(u['id'],))}
+@app.put('/api/preferences/colormaps/{name}')
+def save_colormap(name:Annotated[str,Path_(pattern=PRESET_NAME)],p:ColorMapPreset,u=Depends(approved)):
+ pos=[q.position for q in p.points]
+ if pos[0]!=0 or pos[-1]!=1 or any(b<a for a,b in zip(pos,pos[1:])): fail(400,'Control point 위치는 0에서 시작해 1에서 끝나고 증가해야 합니다.')
+ if name.strip().lower() in ('gray','jet','hot','cool'): fail(400,'기본 preset 이름은 쓸 수 없습니다.')
+ with store.connect() as c:
+  if c.execute('SELECT COUNT(*) FROM colormap_presets WHERE user_id=? AND name!=?',(u['id'],name)).fetchone()[0]>=32: fail(400,'Preset은 32개까지 저장할 수 있습니다.')
+  c.execute('INSERT OR REPLACE INTO colormap_presets VALUES(?,?,?)',(u['id'],name,p.model_dump_json()))
+ return colormap_presets(u)
+@app.delete('/api/preferences/colormaps/{name}')
+def delete_colormap(name:str,u=Depends(approved)):
+ with store.connect() as c:
+  if not c.execute('DELETE FROM colormap_presets WHERE user_id=? AND name=?',(u['id'],name)).rowcount: fail(404,'저장된 preset이 없습니다.')
+ return colormap_presets(u)

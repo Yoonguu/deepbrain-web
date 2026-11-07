@@ -1,8 +1,8 @@
-# deepbrain-web · v8 · 디자인 규격 v2.1
+# Deepbrain Web v9 · 디자인 규격 v2.2
 
-현재 버전은 `VERSION`의 `8.0.0`이며, 소스·문서·변경 기록은 [Yoonguu/deepbrain-web](https://github.com/Yoonguu/deepbrain-web)에서 관리합니다. v8부터의 변경과 검증은 [CHANGELOG.md](CHANGELOG.md)에 기록합니다. v8은 제공된 v7 소스를 기준으로 버전 관리를 시작하는 버전입니다.
+버전은 `9.0.0`이며, 제공된 `medical-web-v8.zip`을 검토·수정한 버전입니다. 변경과 검증은 [V9_CHANGES.md](V9_CHANGES.md)에 기록합니다. GitHub 적용 브랜치는 `white`이며, 실제 테스트 영상은 Ubuntu `/data/test-data/oasis-0001-0010`에 보관합니다.
 
-v7 변경과 검증 결과는 [V7_CHANGES.md](V7_CHANGES.md)를 참조하세요.
+v8 변경과 검증 결과는 [V8_CHANGES.md](V8_CHANGES.md)를 참조하세요. 이전 변경은 V7_CHANGES.md 이하 문서에 남아 있습니다.
 
 Devstream 공개 주소에서 실행하는 방법은 [DEPLOYMENT.md](DEPLOYMENT.md)를 참조하세요.
 
@@ -30,7 +30,7 @@ Uvicorn은 worker 1개로 실행합니다. 여러 worker의 작업 큐를 공유
 ## 사용 순서
 
 1. 로그인 → 자료 관리자에서 `합성 영상 추가` 또는 NIfTI 파일 업로드.
-2. 자료를 Fixed/Moving으로 열기 → 상단 영상 보기·Registration·Segmentation·측정 메뉴.
+2. 자료를 Fixed/Moving으로 열기 → 상단 영상 보기·Registration·Segmentation(Brain/Vessel)·측정·도구 메뉴.
 3. 자료의 `기록` 버튼 → 소견서 공동 수정, 메모 작성. 수정 충돌 시 기존 입력을 남겨 최신 기록과 비교할 수 있습니다.
 4. 같은 부서 의사는 공동 열람·작성하고 해당 부서장만 자료를 삭제 목록으로 이동할 수 있습니다. 부서장은 삭제 목록에서 원본 파일과 연결된 결과·소견서·메모를 영구 삭제할 수 있습니다.
 
@@ -43,7 +43,7 @@ Uvicorn은 worker 1개로 실행합니다. 여러 worker의 작업 큐를 공유
 | F1 | NiiVue MPR: Axial / Coronal / Sagittal |
 | F2 / F11 | Axial slab 범위 선택 후 실제 최대값 투영 작업 |
 | F3 | Volume rendering, 마우스로 회전 |
-| F4 | 기존 VersorRigid3D + Diffeomorphic Demons. Demons는 C2AMorph와 별개 |
+| F4 | VersorRigid3D + Diffeomorphic Demons, Deep Learning 모델 선택(LFCAMorph OASIS) |
 | F5 | Fixed/Moving Overlay, 불투명도 조절 |
 | F6 | Hessian/Sato vesselness, Confidence Connected, Threshold, 수동 Mask |
 | F7 | 동일 영상의 세 단면 Linked crosshair |
@@ -55,7 +55,7 @@ Uvicorn은 worker 1개로 실행합니다. 여러 worker의 작업 큐를 공유
 | F14 | 양수 수동 Mask의 Axial slice 간 signed-distance 보간 |
 | F15 | 여러 NIfTI modality Overlay + Fixed/Moving/마지막 결과 독립 패널 비교 |
 
-C2AMorph의 코드·가중치는 제공되지 않아 비활성 상태입니다. 실제 제조사 알고리즘과 같은 구현이라는 의미는 아닙니다. 임의 oblique slab, 4D 처리, PACS/DICOM 직접 수신은 아직 포함하지 않았습니다. 비교 화면은 Fixed/Moving/마지막 결과의 최대 세 패널입니다. 첨부 문서의 설명용 GIF는 제작하지 않았습니다.
+Deep Learning 목록의 LFCAMorph(LPBA40), VoxelMorph, HyperMorph는 가중치를 받지 않아 준비 중으로 표시됩니다. 실제 제조사 알고리즘과 같은 구현이라는 의미는 아닙니다. 임의 oblique slab, 4D 처리, PACS/DICOM 직접 수신은 아직 포함하지 않았습니다. 비교 화면은 Fixed/Moving/마지막 결과의 최대 세 패널입니다. 첨부 문서의 설명용 GIF는 제작하지 않았습니다.
 
 Mask 보간은 일부 Axial slice만 그린 binary mask를 대상으로 합니다. Mask 그리기 → Mask 저장 → 자료 관리자에서 Mask를 Fixed로 열기 → Run Interpolation 순서입니다. Active Contour는 첫 Seed와 Radius/Iterations를 사용합니다. 측정은 Fixed에 표시된 점만 기록하며 ROI는 구형입니다. 비영점 부피를 원본 강도 영상에서 병변 부피로 해석하지 마세요.
 
@@ -84,13 +84,17 @@ python -m unittest discover -s tests -v
 합성 영상으로 인증/CSRF/부서 격리/소견서 버전 충돌/삭제 권한과 영상 처리 API를 검사합니다. 실제 MRI의 알고리즘 정확성을 증명하는 검사가 아닙니다.
 
 
-## C2AMorph 실행
+## Deep Learning 실행
 
-F는 LapIRN 계열 3단계 diffeomorphic 정합 모델입니다. PyTorch가 있어야 동작합니다.
+Registration 메뉴의 F. Deep Learning에서 모델을 고릅니다. 실행 가능한 모델은 LFCAMorph(OASIS)이며 LapIRN 계열 3단계 diffeomorphic 정합입니다. PyTorch가 있어야 동작합니다. 가중치 경로는 `backend/models/lfcamorph/MRD_FD_BD_l3_30000.pth`이며 환경 변수 `LFCAMORPH_OASIS_WEIGHTS`로 바꿀 수 있습니다.
 
 ```bash
-/home/ubuntu/venvs/medical-web/bin/python -m pip install -r requirements-c2amorph.txt
+/home/ubuntu/venvs/medical-web/bin/python -m pip install -r requirements-dl.txt
 # GPU가 없으면: /home/ubuntu/venvs/medical-web/bin/python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
 ```
 
 입력 두 영상은 같은 물리 공간에 정렬되어 있어야 하며, 학습 데이터는 OASIS aligned_norm(160×192×224)입니다. 다른 크기나 다른 전처리의 영상은 결과 notes에 경고가 표시되고 정확도를 보장하지 않습니다.
+
+## 평가 지표
+
+Registration과 Segmentation의 평가 섹션에서 Dice, HD, HD95, ASD, ASSD를 체크박스로 고릅니다. 표면 거리 정의는 medpy.metric.binary와 같고 단위는 voxel spacing을 반영한 mm입니다. 거리 변환은 scipy(`requirements.txt`)를 쓰며, scipy가 없으면 SimpleITK SignedMaurerDistanceMap으로 대신 계산합니다. 한쪽 Mask가 빈 label은 Dice 0, 거리 지표는 정의되지 않음으로 표시합니다.

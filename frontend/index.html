@@ -20,7 +20,6 @@
   header { padding: 12px 16px; border-bottom: 1px solid var(--line); background: var(--panel);
            display: flex; align-items: baseline; gap: 12px; }
   header h1 { font-size: 16px; margin: 0; }
-  header span { color: var(--muted); font-size: 12px; }
   main { display: grid; grid-template-columns: 360px 1fr;  }
   aside { overflow-y: auto; border-right: 1px solid var(--line); background: var(--panel); padding: 12px 16px; }
   section { border-bottom: 1px solid var(--line); padding: 10px 0 14px; }
@@ -99,16 +98,51 @@ nav [aria-current=page]{color:var(--accent);border-bottom-color:var(--accent);}
 #radialLines line.selected{stroke:var(--accent);stroke-width:2;}
 #radialLines circle{fill:var(--muted);}
 @media(prefers-reduced-motion:reduce){.iconButton path{animation:none!important;}}
+.subnav{display:inline-flex;gap:4px;padding-left:4px;border-left:1px solid var(--line);}
+fieldset.checks{border:0;padding:0;margin:4px 0;display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;}
+fieldset.checks legend{padding:0;margin-right:8px;float:left;}
+label.check{display:inline-flex;grid-template-columns:none;gap:4px;margin:0;}
+#evalScroll{max-height:240px;overflow:auto;margin-top:6px;}
+#evalTable{font-size:11px;font-family:ui-monospace,monospace;}
+#evalTable td,#evalTable th{padding:4px 6px;}
+.floating{position:fixed;z-index:950;width:min(680px,calc(100vw - 16px));max-height:calc(100vh - 16px);overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:4px;font-size:13px;}
+.floatHead{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 12px;border-bottom:1px solid var(--line);cursor:move;user-select:none;touch-action:none;}
+.floatHead h2{margin:0;}
+.floatBody{display:grid;grid-template-columns:140px 1fr;min-height:0;}
+#layerList{border-right:1px solid var(--line);padding:6px;display:flex;flex-direction:column;gap:4px;}
+#layerList button{text-align:left;border-color:transparent;background:transparent;font-size:12px;overflow-wrap:anywhere;}
+#layerList button[aria-selected=true]{border-color:var(--accent);}
+.floatMain{padding:6px 12px 12px;min-width:0;}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:8px;}
+.tabs [role=tab]{border:0;border-bottom:2px solid transparent;border-radius:0;background:transparent;}
+.tabs [aria-selected=true]{color:var(--accent);border-bottom-color:var(--accent);}
+.floating label{grid-template-columns:52px 1fr;gap:6px;}
+.floating label.check{grid-template-columns:none;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 12px;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 12px;align-items:center;}
+.plotWrap{display:grid;grid-template-columns:12px 1fr;gap:6px;margin:6px 0;align-items:stretch;}
+.plotWrap.cm{grid-template-columns:1fr;position:relative;}
+.plotWrap.cm canvas,.plotWrap.cm svg{grid-area:1/1;width:100%;height:auto;}
+#ctBar{width:12px;height:100%;border:1px solid var(--line);}
+#ctPlot,#cmPlot{width:100%;height:auto;display:block;touch-action:none;}
+#ctPlot .hist{fill:var(--line);}
+#ctPlot .axis{stroke:var(--muted);stroke-width:1;}
+#ctPlot .curve,#cmPlot .opacity{fill:none;stroke:var(--accent);stroke-width:1.5;}
+#ctPlot .tick{fill:var(--muted);font-size:11px;}
+#ctPlot .handle,#cmPlot .handle{fill:var(--panel);stroke:var(--text);stroke-width:1;cursor:grab;}
+#ctPlot .handle.selected,#cmPlot .handle.selected{stroke:var(--accent);stroke-width:2;}
+#infoTable{font-size:12px;}
+#infoTable td:first-child{color:var(--muted);white-space:nowrap;}
+@media(max-width:860px){.floatBody{grid-template-columns:1fr;}#layerList{border-right:0;border-bottom:1px solid var(--line);}}
 @media(max-width:860px){body{height:auto;overflow:visible;}body>main{grid-template-columns:1fr;height:auto!important;} .canvas-wrap{height:70vh;}#comparePanels{height:auto;}#comparePanels canvas{height:55vh;}}
 </style>
 </head>
 <body>
 <header>
   <h1>Medical Web Prototype</h1>
-  <span>A Registration · B Viewer · D Vessel · E Region growing · F C2AMorph(미수신)</span>
 </header>
 <nav class="toolbar" aria-label="기능 이동">
-<button data-nav="manager">자료 관리자</button><button data-nav="viewer">영상 보기</button><button data-nav="registration">Registration</button><button data-nav="segmentation">Segmentation</button><button data-nav="tools">측정·도구</button><button data-nav="compare">영상 비교</button><button data-nav="records">소견서·메모</button><span id="who" class="muted"></span><button id="logout">로그아웃</button>
+<button data-nav="manager">자료 관리자</button><button data-nav="viewer">영상 보기</button><button data-nav="registration">Registration</button><button data-nav="segmentation" aria-haspopup="true">Segmentation</button><span id="segSubnav" class="subnav" hidden><button data-nav="seg-brain">Brain</button><button data-nav="seg-vessel">Vessel</button></span><button data-nav="tools">측정·도구</button><button data-nav="compare">영상 비교</button><button data-nav="records">소견서·메모</button><span id="who" class="muted"></span><button id="logout">로그아웃</button>
 </nav><div id="iconBar" hidden aria-label="영상 도구"></div>
 <main id="manager"><aside>
 <section><h2>부서 자료</h2><button id="allFiles">전체 자료</button><div class="row"><button id="originalFiles">원본 영상</button><button id="resultFiles">분석 결과</button><button id="trashFiles" hidden>삭제 목록</button></div><div class="row"><button id="demo">합성 영상 추가</button></div><p class="muted">합성 영상은 실제 MRI가 아닙니다.</p></section>
@@ -121,8 +155,8 @@ nav [aria-current=page]{color:var(--accent);border-bottom-color:var(--accent);}
 <section id="recordsSection"><h2>소견서·메모</h2><div id="recordName" class="muted">자료의 기록 버튼을 누르세요.</div><textarea id="reportText" aria-label="소견서" placeholder="공동 소견서"></textarea><div class="row"><button id="saveReport" disabled>소견서 저장</button><button id="reloadRecords" disabled>최신 기록 불러오기</button></div><p id="recordStatus" role="alert"></p><textarea id="noteText" aria-label="의사 메모" placeholder="동료에게 남길 메모"></textarea><button id="addNote" disabled>메모 추가</button><div id="notes"></div><details><summary>소견서 수정 이력</summary><div id="history"></div></details></section>
 </div></main>
 <main id="workspace" hidden>
-  <aside>
-    <section>
+  <aside id="workspaceAside">
+    <section id="loadSection" data-menus="viewer registration seg-brain seg-vessel">
       <h2>영상 불러오기</h2>
       <label>Fixed <input type="file" id="fixedFile" accept=".nii,.nii.gz,.gz"></label>
       <label>Moving <input type="file" id="movingFile" accept=".nii,.nii.gz,.gz"></label>
@@ -133,8 +167,8 @@ nav [aria-current=page]{color:var(--accent);border-bottom-color:var(--accent);}
       </div>
     </section>
 
-    <section id="registrationSection">
-      <h2>A. Registration <span class="tag">VersorRigid3D</span></h2>
+    <section id="registrationSection" data-menus="registration">
+      <h2>A. Registration <span class="tag">VersorRigid3D · Demons</span></h2>
       <label>Metric
         <select id="regMetric">
           <option value="mattes">Mattes Mutual Information</option>
@@ -143,10 +177,19 @@ nav [aria-current=page]{color:var(--accent);border-bottom-color:var(--accent);}
       </label>
       <label>Iterations / level <input type="number" id="regIter" value="150" min="1" max="2000" step="1"></label>
       <div class="muted">LR 0.2 · min step 1e-4 · 2 level (shrink 2,1 · σ 1,0 mm) · 20% sampling seed 42</div>
-      <div class="row"><button class="primary run" id="runReg" disabled>Run Registration</button></div>
+      <div class="muted">Deformable: Rigid 초기 정렬 · Histogram matching · Diffeomorphic Demons(σ 1.0)</div>
+      <div class="row"><button class="primary run" id="runReg" disabled>Run Registration</button><button id="runDeformable" disabled>Run Deformable</button><button id="overlayMoving" disabled>Moving 겹쳐 보기</button></div>
     </section>
 
-    <section id="segmentationSection">
+    <section id="dlSection" data-menus="registration">
+      <h2>F. Deep Learning <span class="tag">학습 모델 정합</span></h2>
+      <label>모델 <select id="dlModel"><option value="">목록 확인 중</option></select></label>
+      <div class="muted" id="dlInfo"></div>
+      <div class="muted" id="dlStatus">모델 상태 확인 중</div>
+      <div class="row"><button class="primary run" id="runDl" disabled>Run Deep Learning</button></div>
+    </section>
+
+    <section id="segmentationSection" data-menus="seg-vessel">
       <h2>D. Vessel enhancement <span class="tag">Hessian · Sato</span></h2>
       <label>대상 <select id="vesTarget"><option value="fixed">Fixed</option><option value="moving">Moving</option></select></label>
       <label>Sigma (mm) <input type="number" id="vesSigma" value="0.7" min="0.01" step="0.01"></label>
@@ -155,7 +198,7 @@ nav [aria-current=page]{color:var(--accent);border-bottom-color:var(--accent);}
       <div class="row"><button class="primary run" id="runVes" disabled>Run Vesselness</button></div>
     </section>
 
-    <section>
+    <section id="regionSection" data-menus="seg-brain seg-vessel">
       <h2>E. Region growing <span class="tag">Confidence Connected</span></h2>
       <label>대상 <select id="rgTarget"><option value="fixed">Fixed</option><option value="moving">Moving</option></select></label>
       <label>Multiplier <input type="number" id="rgMult" value="2.5" min="0.1" max="20" step="0.1"></label>
@@ -170,39 +213,58 @@ nav [aria-current=page]{color:var(--accent);border-bottom-color:var(--accent);}
       <div class="row"><button class="primary run" id="runRg" disabled>Run Segmentation</button></div>
     </section>
 
-    <section>
-      <h2>F. C2AMorph <span class="tag">LapIRN 계열 · OASIS</span></h2>
-      <div class="muted">학습된 3단계 diffeomorphic 모델로 Moving을 Fixed에 한 번에 정합합니다. 두 영상은 같은 공간(OASIS aligned 160×192×224)에 있어야 합니다.</div>
-      <div class="muted" id="c2aStatus">모델 상태 확인 중</div>
-      <div class="row"><button id="runC2a" disabled>Run C2AMorph</button></div>
+    <section id="maskSection" data-menus="seg-brain seg-vessel">
+      <h2>Mask 도구 <span class="tag">Threshold · Active contour · 보간</span></h2>
+      <label>하한<input id="thresholdLow" type="number" value="20"></label><label>상한<input id="thresholdHigh" type="number" value="100"></label>
+      <div class="row"><button class="primary run" id="runThreshold">Run Threshold</button></div>
+      <label>Contour 반복<input id="contourIter" type="number" value="300" min="1" max="5000" step="1"></label>
+      <div class="row"><button id="runContour">Run Active Contour</button></div>
+      <p class="muted">Active contour: E 대상이 Fixed일 때 찍은 첫 Seed와 Radius를 쓰고, 영상 gradient 분포로 speed image를 정합니다.</p>
+      <div class="row"><button id="drawMask">Mask 그리기 전환</button><button id="undoMask">그리기 취소</button><button id="saveMask">Mask 저장</button></div>
+      <div class="row"><button id="runInterpolate">Run Interpolation</button></div>
+      <p class="muted">보간: 두 개 이상 Axial slice에 양수 라벨을 그린 Mask를 Fixed로 불러오세요.</p>
     </section>
 
-    <section>
-      <h2>평가 · Dice <span class="tag">Label별 Dice</span></h2><div class="muted">Fixed·Moving을 동일 좌표계의 Mask 또는 label 영상으로 불러오세요. 정수 label이면 label별, 아니면 전경 Dice를 계산합니다.</div><button id="runDice">Run Dice</button>
+    <section id="evalSection" data-menus="registration seg-brain seg-vessel">
+      <h2>평가 <span class="tag">Dice · HD · HD95 · ASD · ASSD</span></h2>
+      <label>예측 <select id="evalPred"><option value="moving">Moving</option><option value="fixed">Fixed</option><option value="result">마지막 결과</option></select></label>
+      <label>기준 <select id="evalRef"><option value="fixed">Fixed</option><option value="moving">Moving</option><option value="result">마지막 결과</option></select></label>
+      <fieldset id="evalMetrics" class="checks"><legend class="muted">지표</legend>
+        <label class="check"><input type="checkbox" value="dice" checked>Dice</label>
+        <label class="check"><input type="checkbox" value="hd">HD</label>
+        <label class="check"><input type="checkbox" value="hd95" checked>HD95</label>
+        <label class="check"><input type="checkbox" value="asd">ASD</label>
+        <label class="check"><input type="checkbox" value="assd" checked>ASSD</label>
+      </fieldset>
+      <div class="muted">같은 좌표계의 Mask 또는 label 영상 두 개를 고릅니다. 정수 label은 label별, 그 외는 전경으로 계산합니다. 거리 단위 mm · 한쪽 Mask가 비면 정의되지 않음.</div>
+      <div class="row"><button class="primary run" id="runEval" disabled>Run Evaluation</button></div>
+      <div id="evalScroll"><table id="evalTable"></table></div>
     </section>
 
-    <section>
-      <h2>결과</h2>
-      <pre class="result" id="resultBox">아직 결과 없음</pre>
-    </section>
-
-    <section id="toolsSection"><h2>영상 도구</h2>
+    <section id="toolsSection" data-menus="tools"><h2>영상 도구</h2>
+    <div class="muted" id="toolTarget">대상 영상 없음 · 자료 관리자나 다른 메뉴에서 영상을 여세요.</div>
     <label>단면<select id="sliceSelect"><option value="3">MPR</option><option value="0">Axial</option><option value="1">Coronal</option><option value="2">Sagittal</option><option value="4">3D</option></select></label>
     <label>배치<select id="layoutSelect"><option value="0">자동</option><option value="1">세로</option><option value="2">2×2</option><option value="3">가로</option><option value="9">3×3 Axial</option></select></label>
     <label>조작<select id="dragSelect"><option value="contrast">Window/Level</option><option value="pan">Pan / Zoom</option><option value="measurement">거리 측정</option></select></label>
     <div class="muted">동일 영상의 세 단면 위치·밝기를 함께 조절합니다. 휠: 단면 이동. 우클릭 드래그: 선택한 조작.</div>
-    <div class="row"><button id="resetView">보기 초기화</button><button id="overlayMoving">Moving 겹쳐 보기</button><button id="runDeformable">Run Deformable</button></div>
+    <div class="row"><button id="resetView">보기 초기화</button></div>
     <label>추가 Modality<input id="modalityFile" type="file" accept=".nii,.nii.gz"></label>
     <label>Axial 시작<input id="slabStart" type="number" min="0" value="0"></label><label>Axial 끝<input id="slabEnd" type="number" min="0" value="10"></label><button id="runMip">Run MIP</button>
     <p class="muted" id="slabInfo">현재 Fixed 영상의 Axial slab을 최대 밝기로 투영합니다.</p>
-    <label>하한<input id="thresholdLow" type="number" value="20"></label><label>상한<input id="thresholdHigh" type="number" value="100"></label><button id="runThreshold">Run Threshold</button><div class="row"><button id="drawMask">Mask 그리기 전환</button><button id="undoMask">그리기 취소</button><button id="saveMask">Mask 저장</button></div>
-    <label>Contour 반복<input id="contourIter" type="number" value="300" min="1" max="5000" step="1"></label>
-    <div class="row"><button id="runContour">Run Active Contour</button><button id="runInterpolate">Run Interpolation</button></div>
-    <p class="muted">Active contour: E 대상이 Fixed일 때 찍은 첫 Seed와 Radius를 쓰고, 영상 gradient 분포로 speed image를 정합니다. 보간: 두 개 이상 Axial slice에 양수 라벨을 그린 Mask를 Fixed로 불러오세요.</p>
     <button id="capturePoint">현재 위치 기록</button><button id="clearPoints">측정점 비우기</button><pre id="pointList" class="result"></pre>
     <label>구형 ROI 반경 mm<input id="roiRadius" type="number" value="5" min="0.1" max="100"></label><button id="measure">Run Measurement</button>
     <p class="muted">1점: 구형 ROI 통계 / 2점: 거리 / 3점: 각도. 비영점 부피는 Mask에서만 의미가 있습니다.</p>
     <p id="toolStatus" role="alert"></p>
+    </section>
+    <section id="layerSection" data-menus="tools">
+      <h2>Layer Inspector <span class="tag">Contrast · Color Map</span></h2>
+      <div class="muted">ITK-SNAP Layer Inspector의 Contrast·Color Map·Info 항목을 떠 있는 창으로 엽니다. 창을 연 채로 영상을 조작할 수 있습니다.</div>
+      <div class="row"><button id="openContrast">Contrast 열기</button><button id="openColormap">Color Map 열기</button><button id="openInfo">Info 열기</button></div>
+    </section>
+
+    <section id="resultSection" data-menus="viewer registration seg-brain seg-vessel tools">
+      <h2>결과</h2>
+      <pre class="result" id="resultBox">아직 결과 없음</pre>
     </section>
   </aside>
 
@@ -223,6 +285,33 @@ nav [aria-current=page]{color:var(--accent);border-bottom-color:var(--accent);}
 </main>
 
 <main id="compare" hidden><aside><section><h2>다중 영상 비교</h2><p class="muted">자료 관리자에서 Fixed와 Moving을 선택하세요. 마지막 분석 결과도 함께 표시합니다.</p><button id="loadCompare">비교 영상 불러오기</button><label>단면<select id="compareSlice"><option value="0">Axial</option><option value="1">Coronal</option><option value="2">Sagittal</option></select></label><label>조작<select id="compareDrag"><option value="contrast">Window/Level</option><option value="pan">Pan / Zoom</option></select></label><p class="muted">위치·확대·이동·밝기/대비를 패널 간 동기화합니다. 영상은 동일 물리 좌표계를 기준으로 비교합니다.</p><p id="compareStatus" role="alert"></p></section></aside><div class="viewer"><div class="toolbar">Fixed · Moving · 결과 비교</div><div id="comparePanels" class="canvas-wrap"><div><span class="muted">Fixed</span><canvas id="compareFixed"></canvas></div><div><span class="muted">Moving</span><canvas id="compareMoving"></canvas></div><div><span class="muted">결과</span><canvas id="compareResult"></canvas></div></div><div class="status">미정합 영상은 물리 좌표가 일치하지 않을 수 있습니다.</div></div></main>
+<div id="inspector" class="floating" hidden role="dialog" aria-modal="false" aria-labelledby="inspectorTitle">
+  <div class="floatHead" id="inspectorHead"><h2 id="inspectorTitle">Layer Inspector</h2><button id="inspectorClose" aria-label="Layer Inspector 닫기">닫기</button></div>
+  <div class="floatBody">
+    <div id="layerList" role="listbox" aria-label="Layer"></div>
+    <div class="floatMain">
+      <div class="tabs" role="tablist"><button role="tab" data-tab="contrast" aria-selected="true">Contrast</button><button role="tab" data-tab="colormap" aria-selected="false">Color Map</button><button role="tab" data-tab="info" aria-selected="false">Info</button></div>
+      <div data-panel="contrast" role="tabpanel">
+        <div class="grid2"><label>Min<input id="ctMin" type="number" step="any"></label><label>Max<input id="ctMax" type="number" step="any"></label><label>Level<input id="ctLevel" type="number" step="any"></label><label>Window<input id="ctWindow" type="number" step="any" min="0"></label></div>
+        <div class="plotWrap"><canvas id="ctBar" width="12" height="160" aria-label="Colormap 막대"></canvas><svg id="ctPlot" viewBox="0 0 340 184" role="img" aria-label="Histogram과 Contrast curve"></svg></div>
+        <div class="grid3"><label>Point<select id="ctPoint"></select></label><label>x<input id="ctX" type="number" step="any"></label><label>y<input id="ctY" type="number" step="0.01" min="0" max="1"></label></div>
+        <div class="row"><button id="ctAdd" aria-label="Control point 추가">+</button><button id="ctDel" aria-label="Control point 삭제">−</button><button id="ctReset">Reset</button><button id="ctAuto">Auto</button></div>
+        <div class="grid3"><label>Bins<input id="ctBins" type="number" value="40" min="2" max="1024" step="1"></label><label title="Histogram 막대 높이 상한, 전체 voxel 대비 %">Cutoff<input id="ctCut" type="number" value="10" min="0.1" max="100" step="0.1"></label><label class="check"><input id="ctLog" type="checkbox">Log</label></div>
+        <p class="muted">Reset: 전체 밝기 범위 · Auto: 1~99 percentile · Cutoff: histogram 높이 상한(전체 voxel 대비 %). 곡선 점을 끌어 밝기와 색 index의 대응을 바꿉니다.</p>
+      </div>
+      <div data-panel="colormap" role="tabpanel" hidden>
+        <div class="grid3"><label>Preset<select id="cmPreset"></select></label><label>이름<input id="cmName" type="text" maxlength="40" placeholder="새 preset"></label><div class="row"><button id="cmSave" aria-label="현재 Color Map을 preset으로 저장">+</button><button id="cmRemove" aria-label="선택한 preset 삭제">−</button></div></div>
+        <div class="plotWrap cm"><canvas id="cmCanvas" width="340" height="96" aria-label="Color Map 미리보기"></canvas><svg id="cmPlot" viewBox="0 0 340 96" role="img" aria-label="Color Map control point와 opacity"></svg></div>
+        <div class="grid3"><label>Point<select id="cmPoint"></select></label><label>Position<input id="cmPos" type="number" step="0.001" min="0" max="1"></label><label>Opacity<input id="cmOpacity" type="number" step="0.01" min="0" max="1"></label></div>
+        <div class="grid3"><label>Color<input id="cmColor" type="color"></label><label>Style<select id="cmStyle"><option value="regular">Regular</option><option value="two-sided">Two-sided</option></select></label><label>Side<select id="cmSide"><option value="left">Left</option><option value="right">Right</option></select></label></div>
+        <div class="row"><button id="cmAdd" aria-label="Control point 추가">+</button><button id="cmDel" aria-label="Control point 삭제">−</button></div>
+        <div class="grid3"><label>NaN<input id="cmNan" type="color" disabled></label><span class="muted" id="cmNanInfo"></span></div>
+      </div>
+      <div data-panel="info" role="tabpanel" hidden><table id="infoTable"></table></div>
+      <p id="inspectorStatus" role="alert"></p>
+    </div>
+  </div>
+</div>
 <div id="tooltip" hidden role="dialog" aria-label="도구 설명"></div><div id="tooltipNested" hidden role="tooltip"></div><div id="radialMenu" hidden><svg id="radialLines"></svg></div><script type="module">
 const APP_BASE=/^\/i\/[^/]+/.exec(location.pathname)?.[0]||'';
 const appPath=(path)=>APP_BASE+path;
@@ -249,7 +338,7 @@ async function act(id,fn) {try{await fn();}catch(e){feedback(id,e.message,true);
 currentUser=await api('/api/auth/me');
 
 const $ = (id) => document.getElementById(id);
-const state = { fixed: null, moving: null, location: null, seeds: [], busy: false, c2a: null, initialCal: [], seedOwner: null };
+const state = { fixed: null, moving: null, location: null, seeds: [], busy: false, models: [], initialCal: [], seedOwner: null, lastResult: null };
 
 const nv = new Niivue({ backColor: [0.08, 0.09, 0.11, 1], show3Dcrosshair: true, isColorbar: false });
 await nv.attachToCanvas($("gl"));
@@ -281,7 +370,11 @@ function refreshButtons() {
   $("runVes").disabled = !(state[$("vesTarget").value] && free);
   $("runRg").disabled = !(state[$("rgTarget").value] && state.seeds.length > 0 && free);
   $("addSeed").disabled = !state.location || state[$("rgTarget").value]?.image_id !== state.viewed;
-  $("runC2a").disabled = !(hasFixed && hasMoving && free && state.c2a?.available);
+  $("runDeformable").disabled = !(hasFixed && hasMoving && free);
+  $("overlayMoving").disabled = !(hasFixed && hasMoving);
+  $("runDl").disabled = !(hasFixed && hasMoving && free && selectedModel()?.available);
+  $("runEval").disabled = !(evalIds().every(Boolean) && free);
+  $("toolTarget").textContent = state.viewed ? `대상: ${layerTitle(state.viewed)} · 영상 ${nv.volumes.length}개 표시 중` : "대상 영상 없음 · 자료 관리자나 다른 메뉴에서 영상을 여세요.";
   $("idInfo").textContent =
     `Fixed: ${state.fixed ? state.fixed.name + " " + state.fixed.size.join("×") : "-"}\n` +
     `Moving: ${state.moving ? state.moving.name + " " + state.moving.size.join("×") : "-"}`;
@@ -303,7 +396,15 @@ async function show(baseId, overlayId = null, colormap = "red") {
   }
   await nv.loadVolumes(volumes);
   state.initialCal = nv.volumes.map((v) => [v.cal_min, v.cal_max]);
+  reapplyStoredLayers();
+  if (inspector.open) renderInspector();
   if (state.fixed && baseId === state.fixed.image_id) await configureFixedTools(baseId);
+  refreshButtons();
+}
+function layerTitle(id) {
+  if (state.fixed?.image_id === id) return "Fixed " + state.fixed.name;
+  if (state.moving?.image_id === id) return "Moving " + state.moving.name;
+  return (id === state.lastResult ? "결과 " : "") + String(id).slice(0, 8);
 }
 
 async function configureFixedTools(id) {
@@ -421,29 +522,69 @@ $("runRg").onclick = () => runJob("/api/region-growing", {
   radius: Number($("rgRad").value),
 }, "red");
 
-$("runC2a").onclick = () => runJob("/api/c2amorph", {
+$("runDl").onclick = () => runJob("/api/deep-learning", {
   fixed_id: state.fixed.image_id,
   moving_id: state.moving.image_id,
+  model_id: $("dlModel").value,
 }, "red");
-async function loadC2aStatus() {
-  try { state.c2a = await api("/api/c2amorph/status"); }
-  catch (err) { state.c2a = { available: false, reason: err.message }; }
-  $("c2aStatus").textContent = state.c2a.available
-    ? `사용 가능 · ${state.c2a.device} · ${state.c2a.weights}` : `사용 불가: ${state.c2a.reason}`;
-  $("c2aStatus").className = state.c2a.available ? "muted" : "err";
+function selectedModel() { return state.models.find((m) => m.model_id === $("dlModel").value); }
+function renderModelStatus() {
+  const m = selectedModel();
+  $("dlInfo").textContent = m ? `${m.name} · 학습 데이터 ${m.dataset} · ${m.description || ""}` : "";
+  $("dlStatus").textContent = !m ? "모델 없음" : m.available ? `사용 가능 · ${m.device} · ${m.weights}` : `사용 불가: ${m.reason}`;
+  $("dlStatus").className = m?.available ? "muted" : "err";
   refreshButtons();
 }
+async function loadModels() {
+  try { state.models = await api("/api/dl/models"); }
+  catch (err) { state.models = []; $("dlStatus").textContent = `모델 목록 확인 실패: ${err.message}`; $("dlStatus").className = "err"; }
+  $("dlModel").replaceChildren(...state.models.map((m) => {
+    const o = new Option(`${m.name} (${m.dataset})${m.available ? "" : m.reason.startsWith("준비 중") ? " · 준비 중" : " · 사용 불가"}`, m.model_id);
+    o.disabled = m.reason?.startsWith("준비 중"); return o;
+  }));
+  renderModelStatus();
+}
+$("dlModel").onchange = renderModelStatus;
+function evalIds() {
+  const pick = (v) => v === "result" ? state.lastResult : state[v]?.image_id;
+  return [pick($("evalPred").value), pick($("evalRef").value)];
+}
+$("evalPred").onchange = $("evalRef").onchange = refreshButtons;
+const METRIC_LABEL = { dice: "Dice", hd: "HD (mm)", hd95: "HD95 (mm)", asd: "ASD (mm)", assd: "ASSD (mm)" };
+function renderEvaluation(r) {
+  const t = $("evalTable"); t.replaceChildren();
+  const head = t.createTHead().insertRow();
+  for (const text of ["Label", ...r.metrics.map((m) => METRIC_LABEL[m])]) { const th = document.createElement("th"); th.textContent = text; head.append(th); }
+  const cell = (m, v) => v === null || v === undefined ? "정의되지 않음" : m === "dice" ? v.toFixed(4) : v.toFixed(2);
+  const body = t.createTBody();
+  const add = (name, row, title = "") => { const tr = body.insertRow(); tr.insertCell().textContent = name; for (const m of r.metrics) tr.insertCell().textContent = cell(m, row[m]); if (title) tr.title = title; };
+  add(`평균 (${r.labels} label)`, Object.fromEntries(r.metrics.map((m) => [m, r.summary[m].mean])));
+  add("전경 (label > 0)", r.foreground, r.foreground.undefined_reason || "");
+  for (const [label, row] of Object.entries(r.per_label).slice(0, 256)) add(label, row, row.undefined_reason || "");
+}
+$("runEval").onclick = () => act("statusText", async () => {
+  const [prediction_id, reference_id] = evalIds();
+  if (!prediction_id || !reference_id) throw new Error("예측과 기준 영상을 불러오세요.");
+  const metrics = [...document.querySelectorAll("#evalMetrics input:checked")].map((e) => e.value);
+  if (!metrics.length) throw new Error("평가 지표를 하나 이상 선택하세요.");
+  setStatus("[evaluation] 계산 중", 0.3);
+  const r = await api("/api/tools/evaluate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prediction_id, reference_id, metrics }) });
+  renderEvaluation(r); showResult(r); setStatus("완료", 1, "ok");
+});
 
 refreshButtons();
 
 $('who').textContent=currentUser.name+' · '+currentUser.department;
 $('membersSection').hidden=currentUser.role!=='head';
 $('trashFiles').hidden=currentUser.role!=='head';
+let lastSeg='seg-brain';
 function nav(where) {
+ if(where==='segmentation')where=lastSeg; if(where.startsWith('seg-'))lastSeg=where;
  activeNav=where;closeTip();closeRadial();renderBar();
+ $('segSubnav').hidden=!where.startsWith('seg-');
  $('compare').hidden=where!=='compare';if(where==='compare'){$('manager').hidden=true;$('workspace').hidden=true;window.dispatchEvent(new Event('resize'));return;}
  const manager=where==='manager'||where==='records'; $('manager').hidden=!manager; $('workspace').hidden=manager;
- if(!manager) {window.dispatchEvent(new Event('resize')); const target={registration:'registrationSection',segmentation:'segmentationSection',tools:'toolsSection'}[where]; if(target) $(target).scrollIntoView();}
+ if(!manager) {for(const sec of document.querySelectorAll('#workspaceAside section[data-menus]'))sec.hidden=!sec.dataset.menus.split(' ').includes(where);$('workspaceAside').scrollTop=0;window.dispatchEvent(new Event('resize'));}
  if(where==='records') $('recordsSection').scrollIntoView();
 }
 document.querySelectorAll('[data-nav]').forEach(b=>b.onclick=()=>nav(b.dataset.nav));
@@ -476,24 +617,23 @@ $('loadMembers').onclick=()=>act('managerStatus',async()=>{const rows=await api(
 $('sliceSelect').onchange=e=>nv.setSliceType(Number(e.target.value));
 $('layoutSelect').onchange=e=>{if(e.target.value==='9')nv.setSliceMosaicString('A -40 -30 -20; A -10 0 10; A 20 30 40');else {nv.setSliceMosaicString('');nv.setMultiplanarLayout(Number(e.target.value));}};
 $('dragSelect').onchange=e=>(nv.opts.dragMode=nv.dragModes[e.target.value]);
-$('resetView').onclick=()=>{nv.setSliceType(nv.sliceTypeMultiplanar);nv.scene.pan2Dxyzmm=[0,0,0,1];nv.volumes.forEach((v,i)=>{const c=state.initialCal[i];if(c){v.cal_min=c[0];v.cal_max=c[1];}});nv.updateGLVolume();nv.drawScene();};
+$('resetView').onclick=()=>{nv.setSliceType(nv.sliceTypeMultiplanar);nv.scene.pan2Dxyzmm=[0,0,0,1];nv.volumes.forEach((v,i)=>{const c=state.initialCal[i];if(c){v.cal_min=c[0];v.cal_max=c[1];}});nv.updateGLVolume();nv.drawScene();syncFromVolume();};
 $('thresholdLow').oninput=$('thresholdHigh').oninput=e=>{e.target.dataset.edited='1';};
 $('gl').addEventListener('dblclick',e=>{if(nv.opts.sliceType!==nv.sliceTypeMultiplanar){nv.setSliceType(nv.sliceTypeMultiplanar);return;}const rect=$('gl').getBoundingClientRect(),x=(e.clientX-rect.left)*$('gl').width/rect.width,y=(e.clientY-rect.top)*$('gl').height/rect.height;const tile=nv.screenSlices.find(t=>{const [l,top,w,h]=t.leftTopWidthHeight;return x>=l&&x<l+w&&y>=top&&y<top+h;});if(tile)nv.setSliceType(tile.axCorSag);});
-$('overlayMoving').onclick=()=>act('toolStatus',async()=>{if(!state.fixed||!state.moving)throw new Error('Fixed와 Moving을 불러오세요.');await show(state.fixed.image_id,state.moving.image_id);});
-$('modalityFile').onchange=e=>act('toolStatus',async()=>{const f=e.target.files[0];if(!f)return;const image=await api('/api/images?name='+encodeURIComponent(f.name),{method:'POST',body:f});await nv.addVolumeFromUrl({url:imageUrl(image.image_id),colormap:'gray',opacity:.5});});
+$('overlayMoving').onclick=()=>act('statusText',async()=>{if(!state.fixed||!state.moving)throw new Error('Fixed와 Moving을 불러오세요.');await show(state.fixed.image_id,state.moving.image_id);});
+$('modalityFile').onchange=e=>act('toolStatus',async()=>{const f=e.target.files[0];if(!f)return;const image=await api('/api/images?name='+encodeURIComponent(f.name),{method:'POST',body:f});await nv.addVolumeFromUrl({url:imageUrl(image.image_id),name:image.image_id+'.nii.gz',colormap:'gray',opacity:.5});state.initialCal=nv.volumes.map(v=>[v.cal_min,v.cal_max]);if(inspector.open)renderInspector();refreshButtons();});
 $('capturePoint').onclick=()=>{if(state.location?.mm&&state.fixed?.image_id===state.viewed){points.push(Array.from(state.location.mm).slice(0,3));points=points.slice(-3);$('pointList').textContent=JSON.stringify(points);}};
 $('clearPoints').onclick=()=>{points=[];$('pointList').textContent='';};
 $('measure').onclick=()=>act('toolStatus',async()=>{if(!state.fixed||!points.length)throw new Error('Fixed 영상과 측정점을 선택하세요.');showResult(await api('/api/tools/measure',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image_id:state.fixed.image_id,points,radius:Number($('roiRadius').value)})}));feedback('toolStatus','측정 완료 · 결과 영역 확인');});
-async function extraJob(kind,payload={}) {if(!state.fixed)throw new Error('Fixed 영상을 불러오세요.');if(state.busy)throw new Error('현재 작업 완료 후 실행하세요.');state.busy=true;refreshButtons();try{const {job_id}=await api('/api/'+kind,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image_id:state.fixed.image_id,...payload})});const r=await poll(job_id);showResult(r);if(kind==='mip'){await show(r.result_id);nv.setSliceType(nv.sliceTypeAxial);}else await show(r.base_id,r.result_id);feedback('toolStatus','완료');await loadFiles();}finally{state.busy=false;refreshButtons();}}
-$('runDice').onclick=()=>act('toolStatus',async()=>{if(!state.fixed||!state.moving)throw new Error('Fixed·Moving Mask를 불러오세요.');showResult(await api('/api/tools/dice',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fixed_id:state.fixed.image_id,moving_id:state.moving.image_id})}));feedback('toolStatus','Dice 계산 완료');});
-$('runDeformable').onclick=()=>act('toolStatus',async()=>{if(!state.moving)throw new Error('Moving 영상을 불러오세요.');await extraJob('deformable',{fixed_id:state.fixed.image_id,moving_id:state.moving.image_id,iterations_per_level:Number($('regIter').value)});});
+async function extraJob(kind,payload={}) {if(!state.fixed)throw new Error('Fixed 영상을 불러오세요.');if(state.busy)throw new Error('현재 작업 완료 후 실행하세요.');state.busy=true;refreshButtons();try{const {job_id}=await api('/api/'+kind,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image_id:state.fixed.image_id,...payload})});const r=await poll(job_id);showResult(r);if(kind==='mip'){await show(r.result_id);nv.setSliceType(nv.sliceTypeAxial);}else await show(r.base_id,r.result_id);setStatus('완료',1,'ok');await loadFiles();}finally{state.busy=false;refreshButtons();}}
+$('runDeformable').onclick=()=>act('statusText',async()=>{if(!state.moving)throw new Error('Moving 영상을 불러오세요.');await extraJob('deformable',{fixed_id:state.fixed.image_id,moving_id:state.moving.image_id,iterations_per_level:Number($('regIter').value)});});
 $('runMip').onclick=()=>act('toolStatus',()=>extraJob('mip',{start:Number($('slabStart').value),end:Number($('slabEnd').value)}));
-$('runThreshold').onclick=()=>act('toolStatus',()=>extraJob('threshold',{lower:Number($('thresholdLow').value),upper:Number($('thresholdHigh').value)}));
-$('runContour').onclick=()=>act('toolStatus',()=>{if(!state.fixed||state.viewed!==state.fixed.image_id||$('rgTarget').value!=='fixed')throw new Error('Active contour는 Fixed 영상에서 찍은 Seed를 씁니다. E 대상을 Fixed로 두고 Fixed를 연 상태에서 Seed를 추가하세요.');if(!state.seeds.length)throw new Error('Seed를 추가하세요.');return extraJob('active-contour',{seeds_ras_mm:state.seeds,radius:Number($('rgRad').value),contour_iterations:Number($('contourIter').value)});});
-$('runInterpolate').onclick=()=>act('toolStatus',()=>extraJob('interpolate'));
+$('runThreshold').onclick=()=>act('statusText',()=>extraJob('threshold',{lower:Number($('thresholdLow').value),upper:Number($('thresholdHigh').value)}));
+$('runContour').onclick=()=>act('statusText',()=>{if(!state.fixed||state.viewed!==state.fixed.image_id||$('rgTarget').value!=='fixed')throw new Error('Active contour는 Fixed 영상에서 찍은 Seed를 씁니다. E 대상을 Fixed로 두고 Fixed를 연 상태에서 Seed를 추가하세요.');if(!state.seeds.length)throw new Error('Seed를 추가하세요.');return extraJob('active-contour',{seeds_ras_mm:state.seeds,radius:Number($('rgRad').value),contour_iterations:Number($('contourIter').value)});});
+$('runInterpolate').onclick=()=>act('statusText',()=>extraJob('interpolate'));
 $('drawMask').onclick=()=>nv.setDrawingEnabled(!nv.opts.drawingEnabled);
 $('undoMask').onclick=()=>nv.drawUndo();
-$('saveMask').onclick=()=>act('toolStatus',async()=>{const bytes=nv.saveImage({filename:'',isSaveDrawing:true});if(!(bytes instanceof Uint8Array))throw new Error('Mask를 먼저 그리세요.');await api('/api/images?name=manual-mask.nii',{method:'POST',body:bytes});await loadFiles();feedback('toolStatus','Mask 저장 완료 · 자료 관리자에서 Fixed로 열어 보간할 수 있습니다.');});
+$('saveMask').onclick=()=>act('statusText',async()=>{const bytes=nv.saveImage({filename:'',isSaveDrawing:true});if(!(bytes instanceof Uint8Array))throw new Error('Mask를 먼저 그리세요.');await api('/api/images?name=manual-mask.nii',{method:'POST',body:bytes});await loadFiles();setStatus('Mask 저장 완료 · 자료 관리자에서 Fixed로 열어 보간할 수 있습니다.',1,'ok');});
 
 let compareViews=[];
 $('loadCompare').onclick=()=>act('compareStatus',async()=>{
@@ -508,26 +648,26 @@ $('compareDrag').onchange=e=>compareViews.forEach(v=>v.opts.dragMode=v.dragModes
 $('refreshJobs').onclick=()=>act('managerStatus',async()=>{const rows=await api('/api/jobs');$('jobList').replaceChildren();for(const j of rows){const p=document.createElement('p');p.textContent=j.kind+' · '+j.status+' · '+j.message;if(j.status==='failed')p.className='err';if(j.result?.result_id)p.append(button('결과 열기',()=>act('managerStatus',async()=>{await show(j.result.result_id);state.lastResult=j.result.result_id;nav('viewer');})));$('jobList').append(p);}if(!rows.length)$('jobList').textContent='작업 이력 없음';});
 
 await act('managerStatus',loadFiles);
-await loadC2aStatus();
+await loadModels();
 const TIME={show:100,hide:1000,fade:120,hold:250,open:200,loop:1200,denied:220};
 const reduced=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
 const definitions=[
 ['view','mpr','3면 보기','viewMulti'],['view','3d','3D Render','viewRender'],['view','crosshair','Crosshair',''],['view','wl','Window/Level',''],['view','panzoom','Pan / Zoom',''],['view','layout','Layout',''],['view','enlarge','패널 확대',''],['view','reset','초기화','resetView'],
-['reg','rigid','Rigid Registration','runReg'],['reg','deformable','Deformable','runDeformable'],['reg','overlay','Overlay','overlayMoving'],['reg','c2amorph','C2AMorph','runC2a'],
-['seg','vessel','Vesselness','runVes'],['seg','seed','Seed 추가','addSeed'],['seg','region','Region growing','runRg'],['seg','threshold','Threshold','runThreshold'],['seg','contour','Active contour','runContour'],['seg','draw','Mask 그리기','drawMask'],['seg','interp','Slice 보간','runInterpolate'],['seg','dice','Dice','runDice'],
-['tool','point','측정점 기록','capturePoint'],['tool','distance','거리','measure'],['tool','angle','각도','measure'],['tool','roi','ROI','measure'],['tool','mip','MIP slab','runMip'],['tool','modality','Modality 추가','modalityFile'],
+['reg','rigid','Rigid Registration','runReg'],['reg','deformable','Deformable','runDeformable'],['reg','overlay','Overlay','overlayMoving'],['reg','dl','Deep Learning','runDl'],['reg','eval','평가','runEval'],
+['seg','vessel','Vesselness','runVes'],['seg','seed','Seed 추가','addSeed'],['seg','region','Region growing','runRg'],['seg','threshold','Threshold','runThreshold'],['seg','contour','Active contour','runContour'],['seg','draw','Mask 그리기','drawMask'],['seg','interp','Slice 보간','runInterpolate'],['seg','eval','평가','runEval'],
+['tool','point','측정점 기록','capturePoint'],['tool','distance','거리','measure'],['tool','angle','각도','measure'],['tool','roi','ROI','measure'],['tool','mip','MIP slab','runMip'],['tool','modality','Modality 추가','modalityFile'],['tool','contrast','Contrast','openContrast'],['tool','colormap','Color Map','openColormap'],
 ['cmp','load','비교 불러오기','loadCompare'],['cmp','slice','단면 전환',''],['cmp','wl','비교 Window/Level',''],['cmp','panzoom','비교 Pan / Zoom','']
 ].map(([group,key,name,target],order)=>({group,key,name,target,order,id:`icon-${group}-${key}`}));
-const descriptions={mpr:'세 방향 단면을 함께 표시합니다.', '3d':'영상의 입체 구조를 회전하며 확인합니다.',crosshair:'클릭한 위치를 세 단면에 연동합니다.',wl:'영상의 밝기와 대비를 조절합니다.',panzoom:'영상 위치와 확대 비율을 조절합니다.',layout:'단면의 수와 배치를 전환합니다.',enlarge:'현재 단면을 확대하거나 분할 보기로 돌아갑니다.',reset:'영상 위치, 확대 비율, 밝기 범위를 처음 상태로 되돌립니다.',rigid:'Moving 영상을 회전·이동하여 Fixed에 맞춥니다.',deformable:'영상의 부분적인 변형을 계산하여 Fixed에 맞춥니다.',overlay:'두 영상을 겹쳐 정렬 상태를 확인합니다.',c2amorph:'학습된 3단계 pyramid 모델이 Moving을 Fixed에 한 번에 맞추는 변형장을 계산합니다.',vessel:'관 모양 구조의 신호를 강조합니다.',seed:'현재 물리 위치를 분할 시작점으로 추가합니다.',region:'Seed와 비슷한 강도 영역을 분할합니다.',threshold:'지정한 강도 범위로 Mask를 생성합니다.',contour:'Seed 주변 경계를 따라 영역을 분할합니다.',draw:'단면 위에 수동 Mask를 그립니다.',interp:'작성한 Mask 단면 사이를 보간합니다.',dice:'두 Mask가 겹치는 정도를 계산합니다.',point:'현재 위치를 측정점으로 기록합니다.',distance:'두 점 사이의 거리를 mm로 계산합니다.',angle:'세 점으로 만든 각도를 계산합니다.',roi:'기록한 점 주변 구형 영역의 통계를 계산합니다.',mip:'선택한 Axial 범위의 최대 강도를 투영합니다.',modality:'다른 종류의 영상을 추가로 불러옵니다.',load:'Fixed·Moving·결과를 나란히 불러옵니다.',slice:'비교 영상의 단면 방향을 전환합니다.'};
-const concepts={mpr:['MPR','Axial·Coronal·Sagittal 세 직교 단면을 같은 3D 위치에서 재구성한 보기입니다.'],'3d':['Volume rendering','3D 영상 전체를 투명도와 밝기로 합성해 입체로 그립니다.'],crosshair:['물리 좌표','영상마다 voxel 번호가 달라도 같은 mm 위치를 가리키는 기준 좌표입니다.'],wl:['Window/Level','표시할 밝기 범위의 폭(Window)과 중심(Level)입니다.'],panzoom:['Pan','확대한 화면에서 보이는 영역을 옮기는 조작입니다.'],layout:['Mosaic','같은 방향 단면 여러 장을 격자로 나열한 배치입니다.'],enlarge:['MPR','세 직교 단면을 함께 보는 배치입니다. 확대를 해제하면 이 배치로 돌아갑니다.'],reset:['Window/Level','표시 밝기 범위입니다. 초기화하면 처음 불러온 값으로 돌아갑니다.'],rigid:['Mattes MI','두 영상 밝기의 결합 분포로 정렬 정도를 재는 지표입니다. 대조가 다른 영상끼리도 쓸 수 있습니다.'],deformable:['Demons','밝기 차이를 힘으로 삼아 voxel마다 변위를 반복 갱신하는 비강체 정합입니다. 먼저 Rigid로 맞춘 뒤 적용합니다.'],overlay:['Overlay','정합된 영상을 반투명 색으로 겹쳐 어긋남을 확인하는 표시 방식입니다.'],c2amorph:['Diffeomorphic','접힘 없이 되돌릴 수 있는 변형입니다. 속도장을 7번 제곱 적분(scaling-and-squaring)해 만듭니다.'],vessel:['Sigma','Hessian 계산 전 Gaussian 평활의 크기(mm)입니다. 찾을 혈관 반지름과 비슷하게 둡니다.'],seed:['Seed','분할이 시작되는 기준 위치입니다.'],region:['Multiplier','Seed 주변 평균 ± Multiplier × 표준편차 범위의 밝기를 같은 영역으로 봅니다.'],threshold:['Threshold','하한과 상한 사이 밝기를 1로 두는 이진화입니다.'],contour:['Speed image','경계에서 0, 균일한 내부에서 1에 가까워 윤곽의 진행 속도를 정하는 영상입니다.'],draw:['Mask','관심 영역을 1, 나머지를 0으로 표시한 영상입니다.'],interp:['Signed distance','경계까지의 거리를 안쪽 양수, 바깥쪽 음수로 둔 지도입니다. 두 단면의 지도를 선형 보간해 중간 모양을 만듭니다.'],dice:['Dice','2 × 겹친 부피 ÷ 두 부피의 합입니다. 1이면 완전히 일치합니다.'],point:['RAS 좌표','오른쪽(R)·앞(A)·위(S)가 양수인 mm 좌표입니다.'],distance:['RAS 좌표','두 측정점의 mm 좌표 사이 직선 거리를 계산합니다.'],angle:['꼭짓점','세 점 중 두 번째 점이 각의 꼭짓점입니다.'],roi:['ROI','관심 영역입니다. 여기서는 첫 측정점을 중심으로 한 구입니다.'],mip:['MIP','slab 안에서 시선 방향으로 가장 밝은 값만 남기는 투영입니다.'],modality:['Modality','T1, T2, FLAIR처럼 대조가 다른 영상 종류입니다.'],load:['물리 좌표','세 패널은 같은 mm 위치로 연동됩니다.'],slice:['단면 방향','Axial은 가로, Coronal은 앞뒤, Sagittal은 좌우 방향 단면입니다.']};
+const descriptions={mpr:'세 방향 단면을 함께 표시합니다.', '3d':'영상의 입체 구조를 회전하며 확인합니다.',crosshair:'클릭한 위치를 세 단면에 연동합니다.',wl:'영상의 밝기와 대비를 조절합니다.',panzoom:'영상 위치와 확대 비율을 조절합니다.',layout:'단면의 수와 배치를 전환합니다.',enlarge:'현재 단면을 확대하거나 분할 보기로 돌아갑니다.',reset:'영상 위치, 확대 비율, 밝기 범위를 처음 상태로 되돌립니다.',rigid:'Moving 영상을 회전·이동하여 Fixed에 맞춥니다.',deformable:'영상의 부분적인 변형을 계산하여 Fixed에 맞춥니다.',overlay:'두 영상을 겹쳐 정렬 상태를 확인합니다.',dl:'선택한 학습 모델이 Moving을 Fixed에 한 번에 맞추는 변형장을 계산합니다.',eval:'예측과 기준 Mask의 겹침(Dice)과 표면 거리(HD, HD95, ASD, ASSD)를 계산합니다.',contrast:'밝기 범위와 곡선으로 영상 밝기를 색 index에 대응시킵니다.',colormap:'control point로 색과 투명도 막대를 편집합니다.',vessel:'관 모양 구조의 신호를 강조합니다.',seed:'현재 물리 위치를 분할 시작점으로 추가합니다.',region:'Seed와 비슷한 강도 영역을 분할합니다.',threshold:'지정한 강도 범위로 Mask를 생성합니다.',contour:'Seed 주변 경계를 따라 영역을 분할합니다.',draw:'단면 위에 수동 Mask를 그립니다.',interp:'작성한 Mask 단면 사이를 보간합니다.',point:'현재 위치를 측정점으로 기록합니다.',distance:'두 점 사이의 거리를 mm로 계산합니다.',angle:'세 점으로 만든 각도를 계산합니다.',roi:'기록한 점 주변 구형 영역의 통계를 계산합니다.',mip:'선택한 Axial 범위의 최대 강도를 투영합니다.',modality:'다른 종류의 영상을 추가로 불러옵니다.',load:'Fixed·Moving·결과를 나란히 불러옵니다.',slice:'비교 영상의 단면 방향을 전환합니다.'};
+const concepts={mpr:['MPR','Axial·Coronal·Sagittal 세 직교 단면을 같은 3D 위치에서 재구성한 보기입니다.'],'3d':['Volume rendering','3D 영상 전체를 투명도와 밝기로 합성해 입체로 그립니다.'],crosshair:['물리 좌표','영상마다 voxel 번호가 달라도 같은 mm 위치를 가리키는 기준 좌표입니다.'],wl:['Window/Level','표시할 밝기 범위의 폭(Window)과 중심(Level)입니다.'],panzoom:['Pan','확대한 화면에서 보이는 영역을 옮기는 조작입니다.'],layout:['Mosaic','같은 방향 단면 여러 장을 격자로 나열한 배치입니다.'],enlarge:['MPR','세 직교 단면을 함께 보는 배치입니다. 확대를 해제하면 이 배치로 돌아갑니다.'],reset:['Window/Level','표시 밝기 범위입니다. 초기화하면 처음 불러온 값으로 돌아갑니다.'],rigid:['Mattes MI','두 영상 밝기의 결합 분포로 정렬 정도를 재는 지표입니다. 대조가 다른 영상끼리도 쓸 수 있습니다.'],deformable:['Demons','밝기 차이를 힘으로 삼아 voxel마다 변위를 반복 갱신하는 비강체 정합입니다. 먼저 Rigid로 맞춘 뒤 적용합니다.'],overlay:['Overlay','정합된 영상을 반투명 색으로 겹쳐 어긋남을 확인하는 표시 방식입니다.'],dl:['Diffeomorphic','접힘 없이 되돌릴 수 있는 변형입니다. LFCAMorph는 속도장을 7번 제곱 적분(scaling-and-squaring)해 만듭니다.'],eval:['HD95','두 표면 사이 거리를 양방향으로 모아 95 percentile을 취한 값입니다. 최대값(HD)보다 튀는 점의 영향을 덜 받습니다.'],contrast:['Contrast curve','가로축 밝기를 세로축 colormap index로 바꾸는 곡선입니다. Min 아래는 0, Max 위는 1입니다.'],colormap:['Two-sided','한 control point에서 왼쪽과 오른쪽 색을 따로 두어 색이 끊기게 하는 방식입니다.'],vessel:['Sigma','Hessian 계산 전 Gaussian 평활의 크기(mm)입니다. 찾을 혈관 반지름과 비슷하게 둡니다.'],seed:['Seed','분할이 시작되는 기준 위치입니다.'],region:['Multiplier','Seed 주변 평균 ± Multiplier × 표준편차 범위의 밝기를 같은 영역으로 봅니다.'],threshold:['Threshold','하한과 상한 사이 밝기를 1로 두는 이진화입니다.'],contour:['Speed image','경계에서 0, 균일한 내부에서 1에 가까워 윤곽의 진행 속도를 정하는 영상입니다.'],draw:['Mask','관심 영역을 1, 나머지를 0으로 표시한 영상입니다.'],interp:['Signed distance','경계까지의 거리를 안쪽 양수, 바깥쪽 음수로 둔 지도입니다. 두 단면의 지도를 선형 보간해 중간 모양을 만듭니다.'],point:['RAS 좌표','오른쪽(R)·앞(A)·위(S)가 양수인 mm 좌표입니다.'],distance:['RAS 좌표','두 측정점의 mm 좌표 사이 직선 거리를 계산합니다.'],angle:['꼭짓점','세 점 중 두 번째 점이 각의 꼭짓점입니다.'],roi:['ROI','관심 영역입니다. 여기서는 첫 측정점을 중심으로 한 구입니다.'],mip:['MIP','slab 안에서 시선 방향으로 가장 밝은 값만 남기는 투영입니다.'],modality:['Modality','T1, T2, FLAIR처럼 대조가 다른 영상 종류입니다.'],load:['물리 좌표','세 패널은 같은 mm 위치로 연동됩니다.'],slice:['단면 방향','Axial은 가로, Coronal은 앞뒤, Sagittal은 좌우 방향 단면입니다.']};
 const previewFiles=new Set(await api('/api/previews').catch(()=>[]));
 function dragName(){const sel=activeNav==='compare'?$('compareDrag'):$('dragSelect');return sel.options[sel.selectedIndex]?.text||'Window/Level';}
 const parameters={rigid:['regIter'],deformable:['regIter'],vessel:['vesSigma','vesA1','vesA2'],region:['rgMult','rgIter','rgRad'],threshold:['thresholdLow','thresholdHigh'],contour:['contourIter','rgRad'],roi:['roiRadius'],mip:['slabStart','slabEnd']};
-const drawings={mpr:'M3 3h18v18H3z M11 3v18 M11 12h10', '3d':'M12 2l9 5v10l-9 5-9-5V7z M3 7l9 5 9-5 M12 12v10',crosshair:'M12 2v7m0 6v7M2 12h7m6 0h7 M9 9h6v6H9z',wl:'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z M12 3v18 M7 6v12 M5 9v6 M9 4v16',panzoom:'M12 2v20M2 12h20M9 5l3-3 3 3M9 19l3 3 3-3M5 9l-3 3 3 3M19 9l3 3-3 3',layout:'M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z',enlarge:'M3 9V3h6M15 3h6v6M3 15v6h6M15 21h6v-6M3 3l6 6M21 21l-6-6',reset:'M20 8a8 8 0 1 0 0 9M20 3v5h-5',rigid:'M2 3h12v12H2zM10 9h12v12H10z',deformable:'M3 3Q12 8 21 3M3 12Q12 7 21 12M3 21Q12 16 21 21M3 3Q8 12 3 21M12 3Q7 12 12 21M21 3Q16 12 21 21',overlay:'M3 3h12v12H3zM9 9h12v12H9z',c2amorph:'M2 3h7v7H2zM15 14h7v7h-7zM5 15q4-8 8 0t8-3',vessel:'M10 22V12L3 4M14 22V12l7-8M10 12l-7 2M14 12l7 2',seed:'M12 22V12M8 8a4 4 0 1 0 8 0 4 4 0 0 0-8 0',region:'M11 12h2M8 12a4 4 0 1 0 8 0 4 4 0 0 0-8 0M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0',threshold:'M4 21V9h3v12M10 21V3h3v18M16 21V6h3v15M2 12h20',contour:'M5 5Q12 0 19 6T18 20Q8 24 3 16T5 5',draw:'M3 21l2-7L17 2l5 5L10 19zM5 14l5 5',interp:'M3 3h18v4H3zM3 17h18v4H3zM6 12h2m3 0h2m3 0h2',dice:'M2 12a7 7 0 1 0 14 0 7 7 0 0 0-14 0M8 12a7 7 0 1 0 14 0 7 7 0 0 0-14 0',point:'M12 5v14M5 12h14M10 10h4v4h-4z',distance:'M3 12h18M3 7v10M21 7v10',angle:'M3 3v18h18M3 13a8 8 0 0 1 8 8',roi:'M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0',mip:'M3 3h18M3 8h18M3 13h18M3 18h18M12 2v20',modality:'M3 3h12v12H3zM7 7h12v12H7zM16 16v6M13 19h9',load:'M2 4h5v16H2zM10 4h5v16h-5zM18 4h5v16h-5z',slice:'M12 12V2m0 10h10m-10 0L3 21M9 5l3-3 3 3M19 9l3 3-3 3'};
+const drawings={mpr:'M3 3h18v18H3z M11 3v18 M11 12h10', '3d':'M12 2l9 5v10l-9 5-9-5V7z M3 7l9 5 9-5 M12 12v10',crosshair:'M12 2v7m0 6v7M2 12h7m6 0h7 M9 9h6v6H9z',wl:'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z M12 3v18 M7 6v12 M5 9v6 M9 4v16',panzoom:'M12 2v20M2 12h20M9 5l3-3 3 3M9 19l3 3 3-3M5 9l-3 3 3 3M19 9l3 3-3 3',layout:'M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z',enlarge:'M3 9V3h6M15 3h6v6M3 15v6h6M15 21h6v-6M3 3l6 6M21 21l-6-6',reset:'M20 8a8 8 0 1 0 0 9M20 3v5h-5',rigid:'M2 3h12v12H2zM10 9h12v12H10z',deformable:'M3 3Q12 8 21 3M3 12Q12 7 21 12M3 21Q12 16 21 21M3 3Q8 12 3 21M12 3Q7 12 12 21M21 3Q16 12 21 21',overlay:'M3 3h12v12H3zM9 9h12v12H9z',dl:'M3 6h4v4H3zM3 14h4v4H3zM17 10h4v4h-4zM7 8l10 4M7 16l10-4M12 4v16',eval:'M3 20h18M6 20V10M11 20V6M16 20v-8M4 8l5-4 5 3 6-4',contrast:'M3 21h18V3M3 21C9 21 9 3 21 3M7 17v4M12 12v9M17 6v15',colormap:'M3 8h18v8H3zM9 8v8M15 8v8M6 19v-3M18 5v3',vessel:'M10 22V12L3 4M14 22V12l7-8M10 12l-7 2M14 12l7 2',seed:'M12 22V12M8 8a4 4 0 1 0 8 0 4 4 0 0 0-8 0',region:'M11 12h2M8 12a4 4 0 1 0 8 0 4 4 0 0 0-8 0M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0',threshold:'M4 21V9h3v12M10 21V3h3v18M16 21V6h3v15M2 12h20',contour:'M5 5Q12 0 19 6T18 20Q8 24 3 16T5 5',draw:'M3 21l2-7L17 2l5 5L10 19zM5 14l5 5',interp:'M3 3h18v4H3zM3 17h18v4H3zM6 12h2m3 0h2m3 0h2',point:'M12 5v14M5 12h14M10 10h4v4h-4z',distance:'M3 12h18M3 7v10M21 7v10',angle:'M3 3v18h18M3 13a8 8 0 0 1 8 8',roi:'M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0',mip:'M3 3h18M3 8h18M3 13h18M3 18h18M12 2v20',modality:'M3 3h12v12H3zM7 7h12v12H7zM16 16v6M13 19h9',load:'M2 4h5v16H2zM10 4h5v16h-5zM18 4h5v16h-5z',slice:'M12 12V2m0 10h10m-10 0L3 21M9 5l3-3 3 3M19 9l3 3-3 3'};
 function svg(d){return `<svg viewBox="0 0 24 24" aria-hidden="true"><path pathLength="1" d="${drawings[d.key]||drawings.layout}"/></svg>`;}
 let preferences=await api('/api/preferences'),activeNav='manager',chosen='',tipTool=null,showTimer,hideTimer,edgeTimer,termTimer,nestedTimer;
 const tooltip=$('tooltip'),nested=$('tooltipNested'),radial=$('radialMenu');
-function conditions(d){const r=[];if(d.key==='c2amorph'&&!state.c2a?.available)return [state.c2a?.reason||'모델 상태 확인 중'];if(d.group==='cmp'&&d.key==='load'||['rigid','deformable','overlay','dice','c2amorph'].includes(d.key)){if(!state.fixed||!state.moving)r.push('Fixed와 Moving 영상 필요');}else if(d.key!=='modality'&&d.group!=='cmp'&&!nv.volumes.length)r.push('영상을 먼저 불러오세요.');if(d.target&&$(d.target)?.disabled)r.push('왼쪽 패널의 실행 조건을 먼저 충족하세요.');const n={distance:2,angle:3,roi:1}[d.key];if(n&&points.length!==n)r.push(`측정점 ${n}개 필요`);if(['rigid','deformable','c2amorph','vessel','region','threshold','contour','interp','mip'].includes(d.key)&&state.busy)r.push('현재 작업 완료 후 실행 가능');return [...new Set(r)];}
+function conditions(d){const r=[];if(d.key==='dl'&&!selectedModel()?.available)return [selectedModel()?.reason||'모델 상태 확인 중'];if(d.key==='eval'&&!evalIds().every(Boolean))r.push('평가 섹션에서 고른 예측·기준 영상 필요');else if(d.group==='cmp'&&d.key==='load'||['rigid','deformable','overlay','dl'].includes(d.key)){if(!state.fixed||!state.moving)r.push('Fixed와 Moving 영상 필요');}else if(d.key!=='modality'&&d.group!=='cmp'&&!nv.volumes.length)r.push('영상을 먼저 불러오세요.');if(d.target&&$(d.target)?.disabled)r.push('왼쪽 패널의 실행 조건을 먼저 충족하세요.');const n={distance:2,angle:3,roi:1}[d.key];if(n&&points.length!==n)r.push(`측정점 ${n}개 필요`);if(['rigid','deformable','dl','eval','vessel','region','threshold','contour','interp','mip'].includes(d.key)&&state.busy)r.push('현재 작업 완료 후 실행 가능');return [...new Set(r)];}
 function selectValue(id,value){$(id).value=value;$(id).dispatchEvent(new Event('change'));}
 function cycle(id){const e=$(id);e.selectedIndex=(e.selectedIndex+1)%e.options.length;e.dispatchEvent(new Event('change'));}
 async function execute(d){if(conditions(d).length)return;chosen=d.id;renderBar();if(d.group==='cmp'){if(d.key==='slice')cycle('compareSlice');else if(['wl','panzoom'].includes(d.key))selectValue('compareDrag',d.key==='wl'?'contrast':'pan');else $(d.target).click();}else if(d.group==='view'&&activeNav==='compare'){for(const v of compareViews){if(d.key==='mpr')v.setSliceType(3);else if(d.key==='3d')v.setSliceType(4);else if(d.key==='wl'||d.key==='panzoom')v.opts.dragMode=v.dragModes[d.key==='wl'?'contrast':'pan'];else if(d.key==='crosshair')v.setDrawingEnabled(false);else if(d.key==='layout')v.setMultiplanarLayout((v.opts.multiplanarLayout+1)%4);else if(d.key==='enlarge')v.setSliceType(v.opts.sliceType===3?0:3);else if(d.key==='reset'){v.scene.pan2Dxyzmm=[0,0,0,1];v.drawScene();}}}else if(d.target)$(d.target).click();else if(d.key==='wl'||d.key==='panzoom')selectValue('dragSelect',d.key==='wl'?'contrast':'pan');else if(d.key==='layout')cycle('layoutSelect');else if(d.key==='crosshair')nv.setDrawingEnabled(false);else if(d.key==='enlarge')nv.setSliceType(nv.opts.sliceType===3?Number($('sliceSelect').value)===3?0:Number($('sliceSelect').value):3);await api('/api/preferences/usage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({icon_id:d.id})});preferences.usage[d.id]=(preferences.usage[d.id]||0)+1;}
@@ -542,8 +682,8 @@ const hint=document.createElement('p');hint.className='ids';hint.textContent=`�
 function enterTool(d,b,angle=null){holdTip();clearTimeout(showTimer);if(!tooltip.hidden)showTip(d,b,angle);else showTimer=setTimeout(()=>showTip(d,b,angle),TIME.show);}
 function positionOutward(el,rect,angle){const cx=rect.left+rect.width/2,cy=rect.top+rect.height/2,c=Math.cos(angle),s=Math.sin(angle);let x=c>=0?rect.right+8:rect.left-8-el.offsetWidth,y=s>=0?rect.bottom+8:rect.top-8-el.offsetHeight;if(Math.abs(c)<0.3)x=cx-el.offsetWidth/2;if(Math.abs(s)<0.3)y=cy-el.offsetHeight/2;if(x<0||x+el.offsetWidth>innerWidth)x=c>=0?rect.left-8-el.offsetWidth:rect.right+8;if(y<0||y+el.offsetHeight>innerHeight)y=s>=0?rect.top-8-el.offsetHeight:rect.bottom+8;el.style.left=Math.max(0,Math.min(x,innerWidth-el.offsetWidth))+'px';el.style.top=Math.max(0,Math.min(y,innerHeight-el.offsetHeight))+'px';}
 function icon(d,isRadial=false){const b=document.createElement('button');b.type='button';b.className='iconButton';if(!isRadial)b.id=d.id;b.dataset.icon=d.id;b.innerHTML=svg(d);b.setAttribute('aria-label',d.name);b.setAttribute('aria-disabled',String(conditions(d).length>0));b.setAttribute('aria-pressed',String(chosen===d.id));b.onclick=()=>act(activeNav==='compare'?'compareStatus':'statusText',()=>execute(d));const angle=()=>isRadial&&b.dataset.angle?Number(b.dataset.angle):null;b.onpointerenter=()=>enterTool(d,b,angle());b.onpointerleave=leaveTip;b.onfocus=()=>enterTool(d,b,angle());b.onblur=leaveTip;let touch;b.onpointerdown=e=>{if(e.pointerType==='touch')touch=setTimeout(()=>showTip(d,b),500);};b.onpointerup=b.onpointercancel=()=>clearTimeout(touch);return b;}
-function renderBar(){const group={viewer:'view',registration:'reg',segmentation:'seg',tools:'tool',compare:'cmp'}[activeNav];$('iconBar').replaceChildren();$('iconBar').hidden=!group;for(const d of definitions.filter(d=>d.group===group))$('iconBar').append(icon(d));document.querySelectorAll('[data-nav]').forEach(b=>b.setAttribute('aria-current',b.dataset.nav===activeNav?'page':'false'));}
-document.querySelectorAll('[data-nav]').forEach(b=>b.addEventListener('click',()=>{activeNav=b.dataset.nav;closeTip();closeRadial();renderBar();}));
+const usable=(d)=>d.key!=='vessel'||activeNav==='seg-vessel';
+function renderBar(){const group={viewer:'view',registration:'reg','seg-brain':'seg','seg-vessel':'seg',tools:'tool',compare:'cmp'}[activeNav];$('iconBar').replaceChildren();$('iconBar').hidden=!group;for(const d of definitions.filter(d=>d.group===group&&usable(d)))$('iconBar').append(icon(d));document.querySelectorAll('[data-nav]').forEach(b=>b.setAttribute('aria-current',b.dataset.nav===activeNav||(b.dataset.nav==='segmentation'&&activeNav.startsWith('seg-'))?'page':'false'));}
 const insideTips=(t)=>t&&(tooltip.contains(t)||nested.contains(t));
 for(const el of [tooltip,nested]){el.onpointerenter=()=>{holdTip();if(el===nested)clearTimeout(nestedTimer);};el.onpointerleave=e=>{if(el===nested){clearTimeout(nestedTimer);nestedTimer=setTimeout(()=>{nested.hidden=true;},TIME.hide);}if(!insideTips(e.relatedTarget))leaveTip();};el.onfocusin=holdTip;el.onfocusout=e=>{if(!insideTips(e.relatedTarget))leaveTip();};}
 let previousPointer,windowTimer;function leaveWindow(){clearTimeout(windowTimer);windowTimer=setTimeout(closeTip,Math.max(0,TIME.hide-(performance.now()-(previousPointer?.t||performance.now()))));}
@@ -555,12 +695,209 @@ function layout(cx,cy,rect){const candidates=[[-Math.PI,Math.PI],[0,Math.PI],[-M
 const fits=(start,arc,x,y,r)=>{for(let a=start;a<=start+arc+.001;a+=.02){const px=x+Math.cos(a)*r,py=y+Math.sin(a)*r;if(px<rect.left+28||px>rect.right-28||py<rect.top+28||py>rect.bottom-28)return false;}return true;};
 for(const [start,arc]of candidates)if(fits(start,arc,cx,cy,160))return {x:cx,y:cy,start,arc,radii:[96,160]};
 const start=cy<rect.top+rect.height/2?(cx<rect.left+rect.width/2?0:Math.PI/2):(cx<rect.left+rect.width/2?-Math.PI/2:Math.PI);let x=cx,y=cy;const arc=Math.PI/2;const samples=Array.from({length:101},(_,i)=>start+i*arc/100);const xs=samples.map(a=>Math.cos(a)*224),ys=samples.map(a=>Math.sin(a)*224);x=Math.max(rect.left+28-Math.min(0,...xs),Math.min(x,rect.right-28-Math.max(0,...xs)));y=Math.max(rect.top+28-Math.min(0,...ys),Math.min(y,rect.bottom-28-Math.max(0,...ys)));return{x,y,start,arc,radii:[96,160,224]};}
-function openRadial(g){const l=layout(g.x,g.y,g.canvas.getBoundingClientRect());center=l;const groups=activeNav==='compare'?['cmp','view']:['view','reg','seg','tool'];const available=definitions.filter(d=>groups.includes(d.group));const pinned=preferences.pinned.map(id=>available.find(d=>d.id===id)).filter(Boolean);const rest=available.filter(d=>!preferences.pinned.includes(d.id)).sort((a,b)=>(preferences.usage[b.id]||0)-(preferences.usage[a.id]||0)||a.order-b.order);const ordered=[...pinned,...rest];radial.hidden=false;const lines=$('radialLines');lines.setAttribute('viewBox',`0 0 ${innerWidth} ${innerHeight}`);let n=0;for(const [row,r]of l.radii.entries()){const count=Math.floor(r*l.arc/48);for(let i=0;i<count&&n<ordered.length;i++){const d=ordered[n++],a=l.start+(i+.5)*l.arc/count,x=l.x+Math.cos(a)*r,y=l.y+Math.sin(a)*r,b=icon(d,true);b.dataset.angle=a;b.style.left=(x-20)+'px';b.style.top=(y-20)+'px';radial.append(b);const line=document.createElementNS('http://www.w3.org/2000/svg','line');for(const[k,v]of Object.entries({x1:l.x,y1:l.y,x2:l.x+Math.cos(a)*(r-20),y2:l.y+Math.sin(a)*(r-20)}))line.setAttribute(k,v);lines.append(line);slots.push({d,b,line,a,r,width:l.arc/count});if(!reduced()){b.animate([{opacity:0,transform:'scale(.6)'},{opacity:1,transform:'scale(1)'}],{duration:TIME.open,delay:row*40,easing:'ease-out',fill:'backwards'});line.style.strokeDasharray=r;line.animate([{strokeDashoffset:r},{strokeDashoffset:0}],{duration:TIME.open,easing:'ease-out'});}}}const dot=document.createElementNS('http://www.w3.org/2000/svg','circle');dot.setAttribute('cx',l.x);dot.setAttribute('cy',l.y);dot.setAttribute('r',3);lines.append(dot);}
+function openRadial(g){const l=layout(g.x,g.y,g.canvas.getBoundingClientRect());center=l;const groups=activeNav==='compare'?['cmp','view']:['view','reg','seg','tool'];const available=definitions.filter(d=>groups.includes(d.group)&&usable(d));const pinned=preferences.pinned.map(id=>available.find(d=>d.id===id)).filter(Boolean);const rest=available.filter(d=>!preferences.pinned.includes(d.id)).sort((a,b)=>(preferences.usage[b.id]||0)-(preferences.usage[a.id]||0)||a.order-b.order);const ordered=[...pinned,...rest];radial.hidden=false;const lines=$('radialLines');lines.setAttribute('viewBox',`0 0 ${innerWidth} ${innerHeight}`);let n=0;for(const [row,r]of l.radii.entries()){const count=Math.floor(r*l.arc/48);for(let i=0;i<count&&n<ordered.length;i++){const d=ordered[n++],a=l.start+(i+.5)*l.arc/count,x=l.x+Math.cos(a)*r,y=l.y+Math.sin(a)*r,b=icon(d,true);b.dataset.angle=a;b.style.left=(x-20)+'px';b.style.top=(y-20)+'px';radial.append(b);const line=document.createElementNS('http://www.w3.org/2000/svg','line');for(const[k,v]of Object.entries({x1:l.x,y1:l.y,x2:l.x+Math.cos(a)*(r-20),y2:l.y+Math.sin(a)*(r-20)}))line.setAttribute(k,v);lines.append(line);slots.push({d,b,line,a,r,width:l.arc/count});if(!reduced()){b.animate([{opacity:0,transform:'scale(.6)'},{opacity:1,transform:'scale(1)'}],{duration:TIME.open,delay:row*40,easing:'ease-out',fill:'backwards'});line.style.strokeDasharray=r;line.animate([{strokeDashoffset:r},{strokeDashoffset:0}],{duration:TIME.open,easing:'ease-out'});}}}const dot=document.createElementNS('http://www.w3.org/2000/svg','circle');dot.setAttribute('cx',l.x);dot.setAttribute('cy',l.y);dot.setAttribute('r',3);lines.append(dot);}
 function picked(x,y){if(!center)return;const dx=x-center.x,dy=y-center.y,r=Math.hypot(dx,dy),a=Math.atan2(dy,dx);if(r<48)return;return slots.find(s=>Math.abs(r-s.r)<=32&&Math.abs(Math.atan2(Math.sin(a-s.a),Math.cos(a-s.a)))<=s.width/2);}
 for(const canvas of ['gl','compareFixed','compareMoving','compareResult'].map($)){canvas.addEventListener('contextmenu',e=>e.preventDefault());canvas.addEventListener('mousedown',e=>{if(replay||e.button!==2)return;e.stopImmediatePropagation();e.preventDefault();gesture={canvas,x:e.clientX,y:e.clientY,open:false};const g=gesture;g.timer=setTimeout(()=>{if(gesture===g){g.open=true;openRadial(g);}},TIME.hold);},true);}
 document.addEventListener('mousemove',e=>{if(!gesture)return;const g=gesture;if(!g.open&&Math.hypot(e.clientX-g.x,e.clientY-g.y)>=5){clearTimeout(g.timer);gesture=null;replay=true;g.canvas.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,button:2,buttons:2,clientX:g.x,clientY:g.y}));replay=false;return;}if(g.open){e.stopImmediatePropagation();const hit=picked(e.clientX,e.clientY);for(const s of slots){s.b.classList.toggle('selected',s===hit);s.line.classList.toggle('selected',s===hit);}if(hit&&tipTool?.id!==hit.d.id)enterTool(hit.d,hit.b,hit.a);else if(!hit)leaveTip();}},true);
 document.addEventListener('mouseup',e=>{if(!gesture||e.button!==2)return;const g=gesture;clearTimeout(g.timer);gesture=null;e.stopImmediatePropagation();if(g.open){const hit=picked(e.clientX,e.clientY);closeRadial();closeTip();if(hit)act(activeNav==='compare'?'compareStatus':'statusText',()=>execute(hit.d));}},true);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&gesture){clearTimeout(gesture.timer);gesture=null;}});renderBar();
+// ---------- Layer Inspector (ITK-SNAP Contrast · Color Map · Info) ----------
+// curve: x는 [Min, Max]를 0~1로 둔 정규화 위치, y는 colormap index(0~1). 끝점은 (0,0)과 (1,1)에 고정한다.
+// colormap: control point position 0~1, 각 점의 left/right RGBA(0~255), style regular|two-sided.
+// 적용: curve와 colormap을 256칸 LUT 하나로 합쳐 NiiVue custom colormap으로 등록하고, cal_min·cal_max에 Min·Max를 넣는다.
+const LUT_SIZE=256, PLOT={w:340,h:184,l:6,r:334,t:8,b:160}, CM={w:340,h:96,l:6,r:334,t:8,b:88};
+const cpoint=(position,c)=>({position,left:[...c],right:[...c],style:'regular'});
+const BUILTIN_PRESETS={
+ Gray:{points:[cpoint(0,[0,0,0,255]),cpoint(1,[255,255,255,255])]},
+ Jet:{points:[{position:0,left:[0,0,0,0],right:[0,0,128,255],style:'two-sided'},cpoint(.125,[0,0,255,255]),cpoint(.375,[0,255,255,255]),cpoint(.625,[255,255,0,255]),cpoint(.875,[255,0,0,255]),cpoint(1,[128,0,0,255])]},
+ Hot:{points:[cpoint(0,[0,0,0,255]),cpoint(.375,[255,0,0,255]),cpoint(.75,[255,255,0,255]),cpoint(1,[255,255,255,255])]},
+ Cool:{points:[cpoint(0,[0,255,255,255]),cpoint(1,[255,0,255,255])]}
+};
+const clone=(o)=>JSON.parse(JSON.stringify(o));
+const clamp=(v,lo,hi)=>Math.min(hi,Math.max(lo,v));
+const lerp=(a,b,t)=>a+(b-a)*t;
+const fmt=(v)=>Number.isFinite(v)?Number(v.toPrecision(5)):'';
+function curveAt(curve,u){
+ if(u<=0)return 0; if(u>=1)return 1;
+ for(let i=0;i<curve.length-1;i++){const a=curve[i],b=curve[i+1];if(u<=b.x)return b.x>a.x?lerp(a.y,b.y,(u-a.x)/(b.x-a.x)):b.y;}
+ return 1;
+}
+function colorAt(points,y){
+ if(y<=points[0].position)return [...points[0].right];
+ for(let i=0;i<points.length-1;i++){const a=points[i],b=points[i+1];if(y<=b.position){const t=b.position>a.position?(y-a.position)/(b.position-a.position):1;return a.right.map((c,k)=>lerp(c,b.left[k],t));}}
+ return [...points[points.length-1].left];
+}
+// LUT 0칸은 Min 이하 값이 쓰는 칸이라 첫 점의 Left 색, 255칸은 Max 이상 값이 쓰는 칸이라 마지막 점의 Right 색을 쓴다.
+function fuseLut(curve,points){
+ const R=[],G=[],B=[],A=[],I=[];
+ for(let k=0;k<LUT_SIZE;k++){
+  const c=k===0?points[0].left:k===LUT_SIZE-1?points[points.length-1].right:colorAt(points,curveAt(curve,k/(LUT_SIZE-1)));
+  R.push(Math.round(c[0]));G.push(Math.round(c[1]));B.push(Math.round(c[2]));A.push(Math.round(c[3]));I.push(k);
+ }
+ return {R,G,B,A,I};
+}
+function pointsFromLut(lut){
+ // NiiVue에 이미 지정된 colormap을 9개 control point로 옮긴다(position k/8 ↔ LUT 칸 round(k/8×255)).
+ const points=[];for(let k=0;k<=8;k++){const i=Math.round(k*255/8)*4;points.push(cpoint(k/8,[lut[i],lut[i+1],lut[i+2],lut[i+3]]));}return points;
+}
+const DATATYPES={2:'uint8',4:'int16',8:'int32',16:'float32',64:'float64',256:'int8',512:'uint16',768:'uint32'};
+const inspector={open:false,tab:'contrast',layer:0,selCurve:0,selColor:0,side:'left',presets:{},settings:new Map(),hist:new Map(),frame:0};
+const layerKey=(v)=>v.name||v.url||String(v.id);
+function layerSettings(index){
+ const v=nv.volumes[index];if(!v)return null;const key=layerKey(v);
+ if(!inspector.settings.has(key)){
+  let points;try{points=pointsFromLut(nv.colormap(v.colormap||'gray',!!v.colormapInvert));}catch{points=clone(BUILTIN_PRESETS.Gray.points);}
+  inspector.settings.set(key,{min:v.cal_min,max:v.cal_max,curve:[{x:0,y:0},{x:1,y:1}],points,preset:'',nan:[0,0,0,0],dirty:false});
+ }
+ return inspector.settings.get(key);
+}
+function scaled(v,raw){const s=v.hdr?.scl_slope||1,i=v.hdr?.scl_inter||0;return raw*s+i;}
+function histogram(index,bins){
+ const v=nv.volumes[index];const key=layerKey(v)+'|'+bins;if(inspector.hist.has(key))return inspector.hist.get(key);
+ const lo=Number.isFinite(v.global_min)?v.global_min:v.cal_min,hi=Number.isFinite(v.global_max)?v.global_max:v.cal_max;
+ const counts=new Float64Array(bins),fine=new Float64Array(4096);let total=0,nan=0;const img=v.img||[];const span=hi>lo?hi-lo:1;
+ for(let i=0;i<img.length;i++){const x=scaled(v,img[i]);if(Number.isNaN(x)){nan++;continue;}const u=clamp((x-lo)/span,0,1);counts[Math.min(bins-1,Math.floor(u*bins))]++;fine[Math.min(4095,Math.floor(u*4096))]++;total++;}
+ const h={lo,hi,counts,fine,total,nan};inspector.hist.set(key,h);return h;
+}
+function percentile(h,q){let acc=0;const target=q*h.total;for(let i=0;i<h.fine.length;i++){acc+=h.fine[i];if(acc>=target)return h.lo+(i+.5)/h.fine.length*(h.hi-h.lo);}return h.hi;}
+function applyLayer(index){
+ const v=nv.volumes[index],s=layerSettings(index);if(!v||!s)return;
+ const key='inspector-layer-'+index;nv.addColormap(key,fuseLut(s.curve,s.points));
+ if(v.colormap!==key)v.colormap=key; // NVImage는 colormap 지정 시 cal 범위를 다시 계산하므로 아래에서 되돌린다.
+ v.cal_min=s.min;v.cal_max=s.max;s.dirty=true;nv.updateGLVolume();
+}
+function reapplyStoredLayers(){nv.volumes.forEach((v,i)=>{const s=inspector.settings.get(layerKey(v));if(s?.dirty)applyLayer(i);});}
+function schedule(){if(inspector.frame)return;inspector.frame=requestAnimationFrame(()=>{inspector.frame=0;applyLayer(inspector.layer);renderInspector();});}
+function syncFromVolume(){nv.volumes.forEach((v,i)=>{const s=inspector.settings.get(layerKey(v));if(s){s.min=v.cal_min;s.max=v.cal_max;}});if(inspector.open)renderInspector();}
+function svgEl(tag,attrs,parent){const e=document.createElementNS('http://www.w3.org/2000/svg',tag);for(const[k,val]of Object.entries(attrs))e.setAttribute(k,val);parent?.append(e);return e;}
+function cssVar(name){return getComputedStyle(document.documentElement).getPropertyValue(name).trim();}
+function layerRole(v,i){if(i===0)return 'Main';const code=v.hdr?.datatypeCode;return [2,4,8,256,512,768].includes(code)&&v.global_max<=255?'Segmentation':'Additional';}
+function layerName(v){const id=String(v.name||'').replace(/\.nii(\.gz)?$/,'');if(state.fixed?.image_id===id)return 'Fixed · '+state.fixed.name;if(state.moving?.image_id===id)return 'Moving · '+state.moving.name;if(state.lastResult===id)return '결과 · '+id.slice(0,8);return id.slice(0,8)||'영상';}
+function renderLayers(){
+ const list=$('layerList');list.replaceChildren();
+ nv.volumes.forEach((v,i)=>{const b=document.createElement('button');b.type='button';b.setAttribute('role','option');b.setAttribute('aria-selected',String(i===inspector.layer));b.textContent=layerRole(v,i)+' · '+layerName(v);b.onclick=()=>{inspector.layer=i;inspector.selCurve=0;inspector.selColor=0;renderInspector();};list.append(b);});
+}
+function curveToPlot(h,s,p){const X=s.min+p.x*(s.max-s.min);return [PLOT.l+(X-h.lo)/((h.hi-h.lo)||1)*(PLOT.r-PLOT.l),PLOT.b-p.y*(PLOT.b-PLOT.t)];}
+function renderContrast(){
+ const i=inspector.layer,v=nv.volumes[i],s=layerSettings(i);const bins=clamp(Math.round(Number($('ctBins').value)||40),2,1024);const h=histogram(i,bins);
+ for(const [id,val] of [['ctMin',s.min],['ctMax',s.max],['ctLevel',(s.min+s.max)/2],['ctWindow',s.max-s.min]])$(id).value=fmt(val);
+ const svg=$('ctPlot');svg.replaceChildren();
+ const cut=clamp(Number($('ctCut').value)||10,0.1,100)/100*h.total||1,log=$('ctLog').checked,scale=(c)=>log?Math.log1p(Math.min(c,cut))/Math.log1p(cut):Math.min(c,cut)/cut;
+ const bw=(PLOT.r-PLOT.l)/bins;
+ h.counts.forEach((c,k)=>{if(c>0){const hh=scale(c)*(PLOT.b-PLOT.t);svgEl('rect',{x:PLOT.l+k*bw,y:PLOT.b-hh,width:Math.max(bw-1,0.5),height:hh,class:'hist'},svg);}});
+ svgEl('line',{x1:PLOT.l,y1:PLOT.b,x2:PLOT.r,y2:PLOT.b,class:'axis'},svg);
+ const pts=s.curve.map(p=>curveToPlot(h,s,p));
+ const poly=[[PLOT.l,PLOT.b],...pts,[PLOT.r,PLOT.t]].map(([x,y])=>clamp(x,PLOT.l,PLOT.r)+','+y).join(' ');
+ svgEl('polyline',{points:poly,class:'curve'},svg);
+ s.curve.forEach((p,k)=>{const [x,y]=pts[k];const c=svgEl('circle',{cx:x,cy:y,r:5,class:'handle'+(k===inspector.selCurve?' selected':''),'aria-label':`Point ${k}`},svg);c.onpointerdown=(e)=>startCurveDrag(e,k);});
+ for(const [x,t,anchor] of [[PLOT.l,fmt(h.lo),'start'],[PLOT.r,fmt(h.hi),'end']]){const tx=svgEl('text',{x,y:PLOT.b+16,'text-anchor':anchor,class:'tick'},svg);tx.textContent=t;}
+ $('ctPoint').replaceChildren(...s.curve.map((_,k)=>new Option(String(k),String(k))));$('ctPoint').value=String(inspector.selCurve);
+ const sel=s.curve[inspector.selCurve];$('ctX').value=fmt(s.min+sel.x*(s.max-s.min));$('ctY').value=fmt(sel.y);
+ const edge=inspector.selCurve===0||inspector.selCurve===s.curve.length-1;$('ctY').disabled=edge;$('ctDel').disabled=edge;
+ const bar=$('ctBar').getContext('2d');for(let y=0;y<160;y++){const c=colorAt(s.points,1-y/159);bar.clearRect(0,y,12,1);bar.fillStyle=`rgba(${c[0]},${c[1]},${c[2]},${c[3]/255})`;bar.fillRect(0,y,12,1);}
+}
+function plotPoint(e,svg,box){const r=svg.getBoundingClientRect();return [(e.clientX-r.left)/r.width*box.w,(e.clientY-r.top)/r.height*box.h];}
+function startCurveDrag(e,k){
+ e.preventDefault();inspector.selCurve=k;const svg=$('ctPlot');const i=inspector.layer,s=layerSettings(i),h=histogram(i,clamp(Math.round(Number($('ctBins').value)||40),2,1024));
+ const move=(ev)=>{const [px,py]=plotPoint(ev,svg,PLOT);const X=h.lo+(px-PLOT.l)/(PLOT.r-PLOT.l)*(h.hi-h.lo);const eps=(h.hi-h.lo)/1000||1e-6;
+  if(k===0)s.min=clamp(X,h.lo-(h.hi-h.lo),s.max-eps);
+  else if(k===s.curve.length-1)s.max=clamp(X,s.min+eps,h.hi+(h.hi-h.lo));
+  else{const a=s.curve[k-1],b=s.curve[k+1],x=(X-s.min)/(s.max-s.min);s.curve[k]={x:clamp(x,a.x+1e-4,b.x-1e-4),y:clamp((PLOT.b-py)/(PLOT.b-PLOT.t),a.y,b.y)};}
+  schedule();};
+ const up=()=>{removeEventListener('pointermove',move);removeEventListener('pointerup',up);};
+ addEventListener('pointermove',move);addEventListener('pointerup',up);renderInspector();
+}
+function renderColormap(){
+ const s=layerSettings(inspector.layer);const c=$('cmCanvas').getContext('2d');const light=cssVar('--panel'),dark=cssVar('--line');
+ for(let x=0;x<CM.w;x+=8)for(let y=0;y<CM.h;y+=8){c.fillStyle=((x+y)/8)%2?dark:light;c.fillRect(x,y,8,8);}
+ for(let x=CM.l;x<=CM.r;x++){const col=colorAt(s.points,(x-CM.l)/(CM.r-CM.l));c.fillStyle=`rgba(${col[0]},${col[1]},${col[2]},${col[3]/255})`;c.fillRect(x,CM.t,1,CM.b-CM.t);}
+ const svg=$('cmPlot');svg.replaceChildren();const X=(p)=>CM.l+p*(CM.r-CM.l),Y=(a)=>CM.b-a/255*(CM.b-CM.t);
+ const line=[];s.points.forEach(p=>{line.push([X(p.position),Y(p.left[3])]);line.push([X(p.position),Y(p.right[3])]);});
+ svgEl('polyline',{points:line.map(p=>p.join(',')).join(' '),class:'opacity'},svg);
+ s.points.forEach((p,k)=>{const c2=svgEl('circle',{cx:X(p.position),cy:Y(p[k===inspector.selColor?inspector.side:'right'][3]),r:5,class:'handle'+(k===inspector.selColor?' selected':''),'aria-label':`Point ${k}`},svg);c2.onpointerdown=(e)=>startColorDrag(e,k);});
+ $('cmPoint').replaceChildren(...s.points.map((_,k)=>new Option(String(k),String(k))));$('cmPoint').value=String(inspector.selColor);
+ const p=s.points[inspector.selColor],edge=inspector.selColor===0||inspector.selColor===s.points.length-1;
+ if(p.style!=='two-sided')inspector.side=inspector.selColor===0?'right':'left';
+ const rgba=p[inspector.side];
+ $('cmPos').value=fmt(p.position);$('cmPos').disabled=edge;
+ $('cmOpacity').value=fmt(rgba[3]/255);
+ $('cmColor').value='#'+rgba.slice(0,3).map(n=>Math.round(n).toString(16).padStart(2,'0')).join('');
+ $('cmStyle').value=p.style;$('cmSide').value=inspector.side;$('cmSide').disabled=p.style!=='two-sided';$('cmDel').disabled=edge;
+ const names=[...Object.keys(BUILTIN_PRESETS),...Object.keys(inspector.presets)];
+ $('cmPreset').replaceChildren(new Option('직접 편집',''),...names.map(n=>new Option(n,n)));$('cmPreset').value=names.includes(s.preset)?s.preset:'';
+ $('cmRemove').disabled=!(s.preset in inspector.presets);
+ const h=histogram(inspector.layer,clamp(Math.round(Number($('ctBins').value)||40),2,1024));
+ $('cmNanInfo').textContent=h.nan?`NaN voxel ${h.nan}개. NiiVue 0.42는 NaN 색 지정을 지원하지 않아 표시에 반영되지 않습니다.`:'NaN voxel 없음';
+}
+function startColorDrag(e,k){
+ e.preventDefault();inspector.selColor=k;const s=layerSettings(inspector.layer),svg=$('cmPlot');const p=s.points[k];
+ if(p.style!=='two-sided')inspector.side=k===0?'right':'left';
+ const move=(ev)=>{const [px,py]=plotPoint(ev,svg,CM);const a=clamp((CM.b-py)/(CM.b-CM.t),0,1)*255;
+  if(k>0&&k<s.points.length-1)p.position=clamp((px-CM.l)/(CM.r-CM.l),s.points[k-1].position+1e-3,s.points[k+1].position-1e-3);
+  if(p.style==='two-sided')p[inspector.side][3]=Math.round(a);else p.left[3]=p.right[3]=Math.round(a);
+  s.preset='';schedule();};
+ const up=()=>{removeEventListener('pointermove',move);removeEventListener('pointerup',up);};
+ addEventListener('pointermove',move);addEventListener('pointerup',up);renderInspector();
+}
+function renderInfo(){
+ const v=nv.volumes[inspector.layer],hdr=v.hdr||{},t=$('infoTable');t.replaceChildren();const aff=hdr.affine||[];
+ const dims=(hdr.dims||[]).slice(1,4),pix=(hdr.pixDims||[]).slice(1,4);
+ const dir=[0,1,2].map(c=>{const col=[0,1,2].map(r=>aff[r]?.[c]??0);const n=Math.hypot(...col)||1;return col.map(x=>fmt(x/n));});
+ const h=histogram(inspector.layer,clamp(Math.round(Number($('ctBins').value)||40),2,1024));
+ const rows=[['Layer',layerRole(v,inspector.layer)+' · '+layerName(v)],['Size (voxel)',dims.join(' × ')],['Spacing (mm)',pix.map(fmt).join(' × ')],['Origin RAS (mm)',[0,1,2].map(r=>fmt(aff[r]?.[3]??0)).join(', ')],['Direction (열, RAS)',dir.map(c=>'('+c.join(', ')+')').join(' ')],['Data type',DATATYPES[hdr.datatypeCode]||String(hdr.datatypeCode??'-')],['밝기 범위',`${fmt(h.lo)} ~ ${fmt(h.hi)}`],['표시 범위',`${fmt(v.cal_min)} ~ ${fmt(v.cal_max)}`],['NaN voxel',String(h.nan)]];
+ for(const [k,val] of rows){const r=t.insertRow();r.insertCell().textContent=k;r.insertCell().textContent=val;}
+}
+function renderInspector(){
+ if(!inspector.open)return;if(!nv.volumes.length){closeInspector();return;}
+ inspector.layer=Math.min(inspector.layer,nv.volumes.length-1);renderLayers();
+ for(const tab of document.querySelectorAll('#inspector [role=tab]'))tab.setAttribute('aria-selected',String(tab.dataset.tab===inspector.tab));
+ for(const panel of document.querySelectorAll('#inspector [data-panel]'))panel.hidden=panel.dataset.panel!==inspector.tab;
+ if(inspector.tab==='contrast')renderContrast();else if(inspector.tab==='colormap')renderColormap();else renderInfo();
+}
+function placeInspector(){const el=$('inspector');const x=clamp(el.offsetLeft,0,Math.max(0,innerWidth-el.offsetWidth)),y=clamp(el.offsetTop,0,Math.max(0,innerHeight-el.offsetHeight));el.style.left=x+'px';el.style.top=y+'px';}
+async function openInspector(tab){
+ if(!nv.volumes.length)throw new Error('영상을 먼저 불러오세요.');
+ if(!inspector.loadedPresets){inspector.presets=await api('/api/preferences/colormaps').catch(()=>({}));inspector.loadedPresets=true;}
+ const el=$('inspector');const first=el.hidden&&!el.style.left;inspector.tab=tab;inspector.open=true;el.hidden=false;
+ if(first){el.style.left=Math.max(0,innerWidth-el.offsetWidth-16)+'px';el.style.top=Math.min(120,Math.max(0,innerHeight-el.offsetHeight))+'px';}
+ placeInspector();renderInspector();
+}
+function closeInspector(){inspector.open=false;$('inspector').hidden=true;}
+$('inspectorClose').onclick=closeInspector;
+for(const tab of document.querySelectorAll('#inspector [role=tab]'))tab.onclick=()=>{inspector.tab=tab.dataset.tab;renderInspector();};
+$('inspectorHead').onpointerdown=(e)=>{if(e.target.closest('button'))return;const el=$('inspector'),dx=e.clientX-el.offsetLeft,dy=e.clientY-el.offsetTop;const move=(ev)=>{el.style.left=(ev.clientX-dx)+'px';el.style.top=(ev.clientY-dy)+'px';placeInspector();};const up=()=>{removeEventListener('pointermove',move);removeEventListener('pointerup',up);};addEventListener('pointermove',move);addEventListener('pointerup',up);};
+window.addEventListener('resize',()=>{if(inspector.open)placeInspector();});
+$('openContrast').onclick=()=>act('toolStatus',()=>openInspector('contrast'));
+$('openColormap').onclick=()=>act('toolStatus',()=>openInspector('colormap'));
+$('openInfo').onclick=()=>act('toolStatus',()=>openInspector('info'));
+function editContrast(fn){const s=layerSettings(inspector.layer),before=clone({min:s.min,max:s.max,curve:s.curve}),sel=inspector.selCurve;fn(s);if(!(Number.isFinite(s.min)&&Number.isFinite(s.max)&&s.max>s.min)){Object.assign(s,before);inspector.selCurve=sel;feedback('inspectorStatus','Max는 Min보다 커야 합니다.',true);renderInspector();return;}$('inspectorStatus').textContent='';schedule();}
+$('ctMin').onchange=e=>editContrast(s=>{s.min=Number(e.target.value);});
+$('ctMax').onchange=e=>editContrast(s=>{s.max=Number(e.target.value);});
+$('ctLevel').onchange=e=>editContrast(s=>{const w=s.max-s.min,l=Number(e.target.value);s.min=l-w/2;s.max=l+w/2;});
+$('ctWindow').onchange=e=>editContrast(s=>{const l=(s.min+s.max)/2,w=Math.max(Number(e.target.value),1e-6);s.min=l-w/2;s.max=l+w/2;});
+$('ctPoint').onchange=e=>{inspector.selCurve=Number(e.target.value);renderInspector();};
+$('ctX').onchange=e=>editContrast(s=>{const k=inspector.selCurve,X=Number(e.target.value);if(k===0)s.min=Math.min(X,s.max-1e-6);else if(k===s.curve.length-1)s.max=Math.max(X,s.min+1e-6);else{const x=(X-s.min)/(s.max-s.min);s.curve[k].x=clamp(x,s.curve[k-1].x+1e-4,s.curve[k+1].x-1e-4);}});
+$('ctY').onchange=e=>editContrast(s=>{const k=inspector.selCurve;if(k>0&&k<s.curve.length-1)s.curve[k].y=clamp(Number(e.target.value),s.curve[k-1].y,s.curve[k+1].y);});
+$('ctAdd').onclick=()=>editContrast(s=>{let k=inspector.selCurve;if(k===s.curve.length-1)k--;const a=s.curve[k],b=s.curve[k+1];s.curve.splice(k+1,0,{x:(a.x+b.x)/2,y:(a.y+b.y)/2});inspector.selCurve=k+1;});
+$('ctDel').onclick=()=>editContrast(s=>{const k=inspector.selCurve;if(k>0&&k<s.curve.length-1){s.curve.splice(k,1);inspector.selCurve=k-1;}});
+$('ctReset').onclick=()=>editContrast(s=>{const h=histogram(inspector.layer,Number($('ctBins').value)||40);s.min=h.lo;s.max=h.hi>h.lo?h.hi:h.lo+1;s.curve=[{x:0,y:0},{x:1,y:1}];inspector.selCurve=0;});
+$('ctAuto').onclick=()=>editContrast(s=>{const h=histogram(inspector.layer,Number($('ctBins').value)||40);const lo=percentile(h,.01),hi=percentile(h,.99);s.min=lo;s.max=hi>lo?hi:lo+1;});
+for(const id of ['ctBins','ctCut','ctLog'])$(id).onchange=()=>renderInspector();
+function editColor(fn){const s=layerSettings(inspector.layer);fn(s,s.points[inspector.selColor]);s.preset='';$('inspectorStatus').textContent='';schedule();}
+const hexToRgb=(hex)=>[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16));
+$('cmPoint').onchange=e=>{inspector.selColor=Number(e.target.value);inspector.side='left';renderInspector();};
+$('cmPos').onchange=e=>editColor((s,p)=>{const k=inspector.selColor;if(k>0&&k<s.points.length-1)p.position=clamp(Number(e.target.value),s.points[k-1].position+1e-3,s.points[k+1].position-1e-3);});
+$('cmOpacity').onchange=e=>editColor((s,p)=>{const a=Math.round(clamp(Number(e.target.value),0,1)*255);if(p.style==='two-sided')p[inspector.side][3]=a;else p.left[3]=p.right[3]=a;});
+$('cmColor').oninput=e=>editColor((s,p)=>{const rgb=hexToRgb(e.target.value);if(p.style==='two-sided')p[inspector.side].splice(0,3,...rgb);else{p.left.splice(0,3,...rgb);p.right.splice(0,3,...rgb);}});
+$('cmStyle').onchange=e=>editColor((s,p)=>{p.style=e.target.value;if(p.style==='regular'){const keep=[...p[inspector.side]];p.left=[...keep];p.right=[...keep];}});
+$('cmSide').onchange=e=>{inspector.side=e.target.value;renderInspector();};
+$('cmAdd').onclick=()=>editColor((s)=>{let k=inspector.selColor;if(k===s.points.length-1)k--;const a=s.points[k],b=s.points[k+1],pos=(a.position+b.position)/2;s.points.splice(k+1,0,cpoint(pos,colorAt(s.points,pos)));inspector.selColor=k+1;});
+$('cmDel').onclick=()=>editColor((s)=>{const k=inspector.selColor;if(k>0&&k<s.points.length-1){s.points.splice(k,1);inspector.selColor=k-1;}});
+$('cmPreset').onchange=e=>{const name=e.target.value;if(!name)return;const s=layerSettings(inspector.layer);const src=BUILTIN_PRESETS[name]||inspector.presets[name];s.points=clone(src.points);s.preset=name;inspector.selColor=0;inspector.side='right';schedule();};
+$('cmSave').onclick=()=>act('inspectorStatus',async()=>{const name=$('cmName').value.trim();if(!name)throw new Error('Preset 이름을 입력하세요.');const s=layerSettings(inspector.layer);inspector.presets=await api('/api/preferences/colormaps/'+encodeURIComponent(name),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({points:s.points,nan:s.nan})});s.preset=name;$('cmName').value='';renderInspector();feedback('inspectorStatus',`Preset ${name} 저장`);});
+$('cmRemove').onclick=()=>act('inspectorStatus',async()=>{const s=layerSettings(inspector.layer);if(!(s.preset in inspector.presets))return;const name=s.preset;inspector.presets=await api('/api/preferences/colormaps/'+encodeURIComponent(name),{method:'DELETE'});s.preset='';renderInspector();feedback('inspectorStatus',`Preset ${name} 삭제`);});
+nv.onIntensityChange=()=>syncFromVolume();
+
 new MutationObserver(()=>{for(const b of $('iconBar').children){const d=definitions.find(d=>d.id===b.id);if(d)b.setAttribute('aria-disabled',String(conditions(d).length>0));}}).observe($('workspace'),{subtree:true,attributes:true,attributeFilter:['disabled']});
 </script>
 </body>

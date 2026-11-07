@@ -1,3 +1,0 @@
-# C2AMorph(F) 실행용 선택 의존성. 설치하지 않으면 F 기능만 비활성으로 표시된다.
-# GPU가 없으면 CPU 빌드: pip install torch --index-url https://download.pytorch.org/whl/cpu
-torch>=2.1

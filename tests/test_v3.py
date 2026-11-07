@@ -105,8 +105,6 @@ class Workflow(unittest.TestCase):
   fid=head.post('/api/demo').json()['image_id']
   self.assertEqual(head.get('/api/images/'+fid+'/axial').json()['axial_index_axis'],'k')
   self.assertEqual(head.post('/api/tools/measure',json={'image_id':fid,'points':[[1,2,3],[1,2]]}).status_code,422)
-  st=head.get('/api/c2amorph/status').json();self.assertIn('available',st)
-  if not st['available']:self.assertEqual(head.post('/api/c2amorph',json={'fixed_id':fid,'moving_id':fid}).status_code,503)
   bad=self.wait(head,head.post('/api/threshold',json={'image_id':fid,'lower':50,'upper':10}).json()['job_id'])
   self.assertEqual(bad['status'],'failed');self.assertIn('하한',bad['error'])
   job=self.wait(head,head.post('/api/registration',json={'fixed_id':fid,'moving_id':fid,'iterations_per_level':2}).json()['job_id'])
@@ -119,4 +117,31 @@ class Workflow(unittest.TestCase):
   self.assertEqual(head.delete('/api/trash/'+fid).json()['deleted_count'],3)
   self.assertFalse((store.ROOT/'images'/(rid+'.tfm')).exists())
   self.assertFalse(any(j.get('result',{}) and j['result'].get('result_id')==rid for j in head.get('/api/jobs').json()))
+ def test_v8_features(self):
+  head=self.client('v8-head@example.invalid','V8A',role='head');other=self.client('v8-other@example.invalid','V8B')
+  fid=head.post('/api/demo').json()['image_id']
+  models=head.get('/api/dl/models').json();ids=[m['model_id'] for m in models]
+  self.assertEqual(ids[0],'lfcamorph-oasis');self.assertFalse(next(m for m in models if m['model_id']=='voxelmorph-oasis')['available'])
+  self.assertEqual(head.post('/api/deep-learning',json={'fixed_id':fid,'moving_id':fid,'model_id':'voxelmorph-oasis'}).status_code,503)
+  self.assertEqual(head.post('/api/deep-learning',json={'fixed_id':fid,'moving_id':fid,'model_id':'unknown'}).status_code,400)
+  self.assertEqual(head.post('/api/c2amorph',json={'fixed_id':fid,'moving_id':fid}).status_code,404)
+  job=self.wait(head,head.post('/api/threshold',json={'image_id':fid,'lower':20,'upper':200}).json()['job_id'])
+  mask=job['result']['result_id']
+  r=head.post('/api/tools/evaluate',json={'prediction_id':mask,'reference_id':mask,'metrics':['dice','hd','hd95','asd','assd']})
+  self.assertEqual(r.status_code,200,r.text);body=r.json()
+  self.assertEqual(body['summary']['dice']['mean'],1.0);self.assertEqual(body['summary']['hd95']['mean'],0.0)
+  self.assertEqual(head.post('/api/tools/evaluate',json={'prediction_id':mask,'reference_id':mask,'metrics':['volume']}).status_code,400)
+  self.assertEqual(other.post('/api/tools/evaluate',json={'prediction_id':mask,'reference_id':mask}).status_code,404)
+  self.assertEqual(head.post('/api/tools/dice',json={'fixed_id':mask,'moving_id':mask}).json()['dice'],1.0)
+  with store.connect() as c:c.execute("INSERT OR REPLACE INTO preferences VALUES(?,?,?)",(head.get('/api/auth/me').json()['id'],'["icon-reg-c2amorph","icon-reg-dl"]','{"icon-reg-c2amorph":3}'))
+  prefs=head.get('/api/preferences').json();self.assertEqual(prefs['pinned'],['icon-reg-dl']);self.assertEqual(prefs['usage'],{})
+  self.assertEqual(head.put('/api/preferences/pinned',json={'pinned':['icon-tool-contrast','icon-tool-colormap','icon-seg-eval']}).status_code,200)
+  preset={'points':[{'position':0,'left':[0,0,0,0],'right':[0,0,128,255],'style':'two-sided'},{'position':1,'left':[128,0,0,255],'right':[128,0,0,255]}],'nan':[0,0,0,0]}
+  self.assertEqual(head.put('/api/preferences/colormaps/내 Jet',json=preset).json()['내 Jet']['points'][0]['style'],'two-sided')
+  self.assertEqual(other.get('/api/preferences/colormaps').json(),{})
+  self.assertEqual(head.put('/api/preferences/colormaps/Jet',json=preset).status_code,400)
+  bad={**preset,'points':list(reversed(preset['points']))}
+  self.assertEqual(head.put('/api/preferences/colormaps/bad',json=bad).status_code,400)
+  self.assertEqual(head.delete('/api/preferences/colormaps/내 Jet').json(),{})
+  self.assertEqual(head.delete('/api/preferences/colormaps/내 Jet').status_code,404)
 if __name__=='__main__':unittest.main()

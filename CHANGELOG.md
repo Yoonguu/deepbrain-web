@@ -1,5 +1,9 @@
 # 변경 이력
 
+## 9.0.0 — 2026-11-07
+
+사용자 제공 개정 v8을 기반으로 메뉴·Deep Learning·Layer Inspector·평가 기능을 반영한다. HD95/ASSD 정의를 현재 MedPy 구현과 맞추고, OASIS 0001/0010 테스트 쌍과 `/data` 실행 환경을 지정한다. 세부 검증과 변경은 [V9_CHANGES.md](V9_CHANGES.md)에 기록한다. 적용 대상은 GitHub `white`와 Ubuntu `/data`이며 다른 원격 브랜치는 변경하지 않는다.
+
 ## 8.0.0 — 2026-11-07
 
 ### 저장소 기록 시작

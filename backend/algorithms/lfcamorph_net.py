@@ -1,4 +1,4 @@
-"""C2AMorph 네트워크 정의.
+"""LFCAMorph 네트워크 정의.
 
 출처: 사용자 제공 Registration/HMCN/model/LFCAMorph.py (LapIRN 기반 3단계 diffeomorphic 정합).
 LapIRN: Mok & Chung, "Large Deformation Diffeomorphic Image Registration with Laplacian Pyramid Networks", MICCAI 2020.
@@ -12,7 +12,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 try:
-    from dropblock import DropBlock3D  # ResDrop 계열에서만 사용. C2AMorph(MRD_diff)는 쓰지 않는다.
+    from dropblock import DropBlock3D  # ResDrop 계열에서만 사용. LFCAMorph의 MRD_diff 구성은 쓰지 않는다.
 except ImportError:  # pragma: no cover
     class DropBlock3D(nn.Module):
         def __init__(self, block_size=7, drop_prob=0.0):

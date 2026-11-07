@@ -1,0 +1,99 @@
+{
+  "version": "9.0.0",
+  "status": "passed",
+  "checks": [
+    "24 source file sizes and SHA-256 digests",
+    "four finite scalar 3D images share the trained OASIS grid",
+    "authenticated NIfTI download and five real-label metrics",
+    "LFCAMorph API inference, finite warp/field, and warped-label evaluation"
+  ],
+  "geometry": {
+    "size": [
+      160,
+      192,
+      224
+    ],
+    "spacing": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "runtime_s": 18.42,
+  "before_registration": {
+    "dice": {
+      "mean": 0.6093036769959624,
+      "defined_labels": 35,
+      "labels": 35
+    },
+    "hd": {
+      "mean": 8.315115174418686,
+      "defined_labels": 35,
+      "labels": 35
+    },
+    "hd95": {
+      "mean": 3.577671067892772,
+      "defined_labels": 35,
+      "labels": 35
+    },
+    "asd": {
+      "mean": 1.2195568194312014,
+      "defined_labels": 35,
+      "labels": 35
+    },
+    "assd": {
+      "mean": 1.4328714963345976,
+      "defined_labels": 35,
+      "labels": 35
+    }
+  },
+  "after_registration": {
+    "dice": {
+      "mean": 0.8223003312526957,
+      "defined_labels": 35,
+      "labels": 35
+    },
+    "hd": {
+      "mean": 7.296823790818006,
+      "defined_labels": 35,
+      "labels": 35
+    },
+    "hd95": {
+      "mean": 1.8108474947497315,
+      "defined_labels": 35,
+      "labels": 35
+    },
+    "asd": {
+      "mean": 0.5800274659721582,
+      "defined_labels": 35,
+      "labels": 35
+    },
+    "assd": {
+      "mean": 0.6339882111294375,
+      "defined_labels": 35,
+      "labels": 35
+    }
+  },
+  "deep_learning": {
+    "method": "Deep Learning · LFCAMorph(OASIS)",
+    "model_id": "lfcamorph-oasis",
+    "weights": "MRD_FD_BD_l3_30000.pth (sha256 5ec6f677ae7f)",
+    "device": "cuda",
+    "input_shape_ijk": [
+      160,
+      192,
+      224
+    ],
+    "network_shape": [
+      144,
+      160,
+      192
+    ],
+    "runtime_s": 7.9,
+    "displacement_max_mm": 12.271093544910519,
+    "displacement_mean_mm": 1.6567531188084992,
+    "jacobian_nonpositive_percent": 0.0005231584821428571,
+    "notes": []
+  },
+  "test_scope": "One OASIS pair: fixed 0001, moving 0010. Temporary DB; no research images imported into public demo."
+}

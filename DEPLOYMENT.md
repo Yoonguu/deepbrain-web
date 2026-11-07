@@ -1,28 +1,30 @@
 # Devstream 접속
 
-## 현재 설치 상태 (2026-11-07)
+## v9 실행 환경
 
-- SSH 별칭: `ff9ebb72-6ae84c0c.hackathon`, 사용자: `ubuntu`
-- 소스: `/data/medical-web-v7/medical-web`
-- Python: `/home/ubuntu/venvs/medical-web-v7/bin/python`
-- 실행 데이터: `/data/medical-web-v7/medical-web/data`
-- 현재 서버 로그: `/data/medical-web-v7/server.log`
-- 현재 서버 PID 기록: `/data/medical-web-v7/server.pid`
-
-기존 설치 폴더 이름을 유지하며, 버전은 `VERSION`으로 관리합니다. SSH 키는 로컬 SSH 설정에서만 관리하고 저장소에 넣지 않습니다.
-
-서버가 중지되어 8501 포트를 사용하지 않을 때, 컨테이너 터미널에서 다음 명령으로 실행합니다. 실행 중인 서버가 있다면 중복 실행하지 않습니다.
+- GitHub 대상: `white` 브랜치.
+- 소스: `/data/medical-web-v9/medical-web`
+- Python: `/data/medical-web-v9/.venv/bin/python`
+- 기존 실행 데이터: `/data/medical-web-v7/medical-web/data` (`MEDICAL_DATA_DIR`로 명시).
+- 서버 로그/PID: `/data/medical-web-v9/server.log`, `/data/medical-web-v9/server.pid`.
+- 연구용 테스트 파일: `/data/test-data/oasis-0001-0010`. 공개 데모 DB와 분리한다.
 
 ```bash
-cd /data/medical-web-v7/medical-web
-export PYTHON_BIN=/home/ubuntu/venvs/medical-web-v7/bin/python
-export MEDICAL_DATA_DIR=/data/medical-web-v7/medical-web/data
-bash run_devstream.sh
+cd /data/medical-web-v9/medical-web
+bash scripts/run_persistent_devstream.sh
 ```
 
-`/data`의 프로젝트와 데이터는 보존할 저장 위치이며, 홈 디렉터리의 Python 가상환경은 컨테이너 재생성 시 다시 구성해야 할 수 있습니다. GitHub에는 소스·문서·테스트와 명시된 합성 예시만 기록합니다.
+컨테이너 재시작 시 서버 프로세스는 다시 실행해야 한다. 가상환경은 같은 Python 3.12·Ubuntu 컨테이너의 `/data`에 보관하며, 이미지나 Python 버전이 바뀌면 `requirements.txt`와 `requirements-dl.txt`로 재구성한다. NVIDIA B200 환경은 CUDA 12.8용 PyTorch wheel을 사용한다. 검증된 전체 의존성은 `requirements-runtime.lock`에 보관한다. ITK 5.4.7 wheel의 Tag 메타데이터와 최신 pip의 검사 오류를 피하기 위해 패키지 도구는 검증된 pip 24.0을 사용한다.
 
-## 프록시와 기존 실행 안내
+```bash
+/data/medical-web-v9/.venv/bin/python -m pip install pip==24.0
+/data/medical-web-v9/.venv/bin/python -m pip install -r requirements-runtime.lock
+/data/medical-web-v9/.venv/bin/python -m pip install -r requirements-dl.txt --index-url https://download.pytorch.org/whl/cu128
+/data/medical-web-v9/.venv/bin/python -m unittest discover -s tests -v
+/data/medical-web-v9/.venv/bin/python scripts/verify_oasis_pair.py --deep-learning
+```
+
+아래 안내는 원래 패키지의 프록시 설명과 이전 설치 예시다. 현재 실행은 위 경로를 사용한다.
 
 이 버전은 이 Ubuntu 컨테이너의 8501 포트로 연결되는 공개 경로에서 실행합니다.
 
