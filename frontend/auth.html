@@ -1,0 +1,74 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>로그인</title><style>
+  :root {
+    --bg: #f5f6f8; --panel: #ffffff; --text: #1f2328; --muted: #656d76;
+    --line: #d8dee4; --accent: #2f6feb; --accent-text: #ffffff;
+    --ok: #1a7f37; --err: #cf222e; --viewer: #14171c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0f1115; --panel: #171a20; --text: #e6e8eb; --muted: #9aa3ad;
+            --line: #2a3038; --accent: #4c8dff; --ok: #3fb950; --err: #f85149; --viewer: #0b0d10; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 14px/1.45 system-ui, -apple-system, "Segoe UI", "Noto Sans KR", sans-serif; }
+  header { padding: 12px 16px; border-bottom: 1px solid var(--line); background: var(--panel);
+           display: flex; align-items: baseline; gap: 12px; }
+  header h1 { font-size: 16px; margin: 0; }
+  header span { color: var(--muted); font-size: 12px; }
+  main { display: grid; grid-template-columns: 360px 1fr;  }
+  aside { overflow-y: auto; border-right: 1px solid var(--line); background: var(--panel); padding: 12px 16px; }
+  section { border-bottom: 1px solid var(--line); padding: 10px 0 14px; }
+  section:last-child { border-bottom: none; }
+  h2 { font-size: 13px; margin: 0 0 8px; display: flex; gap: 8px; align-items: center; }
+  h2 .tag { font-size: 11px; padding: 1px 6px; border-radius: 4px; background: var(--line); color: var(--muted); }
+  label { display: grid; grid-template-columns: 120px 1fr; align-items: center; gap: 8px; margin: 4px 0; font-size: 13px; }
+  input[type=number], select { width: 100%; padding: 4px 6px; border: 1px solid var(--line); border-radius: 4px;
+                               background: var(--bg); color: var(--text); }
+  input[type=file] { font-size: 12px; max-width: 100%; }
+  button { padding: 6px 10px; border: 1px solid var(--line); border-radius: 5px; background: var(--bg);
+           color: var(--text); cursor: pointer; font-size: 13px; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  .row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+  .muted { color: var(--muted); font-size: 12px; }
+  .ids { font-family: ui-monospace, monospace; font-size: 11px; color: var(--muted); word-break: break-all; }
+  ul.seeds { margin: 6px 0; padding-left: 18px; font-family: ui-monospace, monospace; font-size: 12px; }
+  .viewer { display: grid; grid-template-rows: auto 1fr auto; min-width: 0; }
+  .toolbar { display: flex; gap: 6px; padding: 8px 12px; border-bottom: 1px solid var(--line); background: var(--panel);
+             align-items: center; flex-wrap: wrap; }
+  .canvas-wrap { position: relative; background: var(--viewer); min-height: 0; }
+  canvas { width: 100%; height: 100%; display: block; }
+  .status { padding: 8px 12px; border-top: 1px solid var(--line); background: var(--panel); font-size: 12px; }
+  progress { width: 220px; vertical-align: middle; }
+  pre.result { max-height: 160px; overflow: auto; background: var(--bg); border: 1px solid var(--line);
+               border-radius: 4px; padding: 6px; font-size: 11px; margin: 6px 0 0; white-space: pre-wrap; }
+  .ok { color: var(--ok); } .err { color: var(--err); }
+  @media (max-width: 860px) {
+    main { grid-template-columns: 1fr; height: auto; }
+    aside { border-right: none; }
+    .canvas-wrap { height: 70vh; }
+  }
+
+  [hidden] { display: none !important; }
+  input[type=text], input[type=password], input[type=email], textarea { width:100%; padding:4px 6px; border:1px solid var(--line); border-radius:4px; background:var(--bg); color:var(--text); font:inherit; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  td,th { padding:6px; text-align:left; border-bottom:1px solid var(--line); }
+  textarea { min-height:100px; }
+  #managerContent { padding:12px 16px; overflow:auto; }
+  #manager, #workspace {  }
+  #fileScroll { overflow:auto; max-height:40vh; }
+  
+  @media(max-width:860px) { #manager,#workspace {height:auto;} }
+:root{--t-show-delay:100ms;--t-hide-delay:1000ms;--t-fade:120ms;--t-radial-hold:250ms;--t-radial-open:200ms;--t-icon-loop:1200ms;--t-denied:220ms;}
+body{display:grid;grid-template-rows:auto 1fr;height:100vh;overflow:hidden;}main{min-height:0;}@media(max-width:860px){body{height:auto;overflow:visible;}}</style></head><body><header><h1>로그인</h1></header><main><aside><section><div class="row"><button id="loginTab">로그인</button><button id="signupTab">회원가입</button></div><form id="form"><label>이메일<input id="email" type="email" required autocomplete="username"></label><label>비밀번호<input id="password" type="password" minlength="12" maxlength="128" required autocomplete="current-password"></label><div id="signupFields" hidden><label>이름<input id="name" type="text" maxlength="80"></label><label>부서<input id="department" type="text" maxlength="80"></label></div><button class="primary" id="submit">로그인</button><p id="reason" role="alert"></p></form><button id="logout" hidden>로그아웃</button></section><section><h2>공개 데모 계정</h2><p class="muted">테스트 전용 부서입니다. 실제 환자 자료를 올리지 마세요.</p><p>관리자<br><code>demo-admin@medical-web.example</code><br><code>DemoAdmin!2026#MRI</code></p><p>의사<br><code>demo-doctor@medical-web.example</code><br><code>DemoDoctor!2026#MRI</code></p></section></aside></main><script type="module">
+const APP_BASE=/^\/i\/[^/]+/.exec(location.pathname)?.[0]||'';
+const appPath=(path)=>APP_BASE+path;
+
+const TIME={show:100,hide:1000,fade:120,hold:250,open:200,loop:1200,denied:220};let mode='login',csrf='';const $=id=>document.getElementById(id);
+function setMode(m){mode=m;$('signupFields').hidden=m!=='signup';$('submit').textContent=m==='login'?'로그인':'가입 요청';$('password').autocomplete=m==='login'?'current-password':'new-password';}
+$('loginTab').onclick=()=>setMode('login');$('signupTab').onclick=()=>setMode('signup');
+function message(text,error){$('reason').textContent=text;$('reason').className=error?'err':'ok';if(error&&!matchMedia('(prefers-reduced-motion: reduce)').matches)$('reason').animate([{transform:'translateX(0)'},{transform:'translateX(-3px)'},{transform:'translateX(3px)'},{transform:'translateX(0)'}],{duration:TIME.denied});}
+$('form').onsubmit=async e=>{e.preventDefault();$('submit').disabled=true;try{const r=await fetch(appPath('/api/auth/'+mode),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:$('email').value,password:$('password').value,name:$('name').value,department:$('department').value})});const j=await r.json();if(!r.ok)throw new Error(typeof j.detail==='string'?j.detail:JSON.stringify(j.detail));if(mode==='login')location.href=appPath('/');else message(j.message,false);}catch(e){message(e.message,true);}finally{$('submit').disabled=false;}};
+const r=await fetch(appPath('/api/auth/me'));if(r.ok){const u=await r.json();csrf=u.csrf;if(u.approved)location.href=appPath('/');else{message('부서 소속 확인 후 이용할 수 있습니다.',true);$('logout').hidden=false;}}
+$('logout').onclick=async()=>{await fetch(appPath('/api/auth/logout'),{method:'POST',headers:{'X-CSRF-Token':csrf}});location.href=appPath('/auth');};
+</script></body></html>
