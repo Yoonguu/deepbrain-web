@@ -98,3 +98,5 @@ Registration 메뉴의 F. Deep Learning에서 모델을 고릅니다. 실행 가
 ## 평가 지표
 
 Registration과 Segmentation의 평가 섹션에서 Dice, HD, HD95, ASD, ASSD를 체크박스로 고릅니다. 표면 거리 정의는 medpy.metric.binary와 같고 단위는 voxel spacing을 반영한 mm입니다. 거리 변환은 scipy(`requirements.txt`)를 쓰며, scipy가 없으면 SimpleITK SignedMaurerDistanceMap으로 대신 계산합니다. 한쪽 Mask가 빈 label은 Dice 0, 거리 지표는 정의되지 않음으로 표시합니다.
+
+test
