@@ -1,4 +1,4 @@
-# Deepbrain Web v8 · 디자인 규격 v2.1
+# deepbrain-web · v8 · 디자인 규격 v2.1
 
 현재 버전은 `VERSION`의 `8.0.0`이며, 소스·문서·변경 기록은 [Yoonguu/deepbrain-web](https://github.com/Yoonguu/deepbrain-web)에서 관리합니다. v8부터의 변경과 검증은 [CHANGELOG.md](CHANGELOG.md)에 기록합니다. v8은 제공된 v7 소스를 기준으로 버전 관리를 시작하는 버전입니다.
 
