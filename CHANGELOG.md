@@ -26,3 +26,7 @@
 ## 이전 버전
 
 v7 변경은 [V7_CHANGES.md](V7_CHANGES.md), v4 변경은 [V4_CHANGES.md](V4_CHANGES.md)를 참조한다. 이전 버전의 문서는 가져온 시점의 기록으로 보관한다.
+
+## v9 외부 채점 자료 추가 — 2026-11-07
+
+사용자 승인으로 공개 데모와 동일한 OASIS 영상·라벨 4개를 white 브랜치에 포함한다. tests/data/oasis/README.md에 역할과 채점 명령을 기록하고 검증기에 --selected-only 옵션을 추가한다.

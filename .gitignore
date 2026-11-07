@@ -36,3 +36,9 @@ htmlcov/
 .DS_Store
 .idea/
 .vscode/
+
+# User-authorized four OASIS grading fixtures; other volumes stay ignored.
+!/tests/data/oasis/OASIS_OAS1_0001_MR1/aligned_norm.nii.gz
+!/tests/data/oasis/OASIS_OAS1_0010_MR1/aligned_norm.nii.gz
+!/tests/data/oasis/OASIS_OAS1_0001_MR1/aligned_seg35.nii.gz
+!/tests/data/oasis/OASIS_OAS1_0010_MR1/aligned_seg35.nii.gz

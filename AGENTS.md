@@ -10,3 +10,5 @@
 - 테스트 자료는 `/data/test-data/oasis-0001-0010` 아래 OASIS 0001(Fixed), 0010(Moving)이다. 기본 영상은 `aligned_norm.nii.gz`, 평가 라벨은 `aligned_seg35.nii.gz`다. 파일 무결성 목록은 `tests/data/oasis_pair.json`을 참조한다.
 - 실행 DB와 업로드 영상은 `MEDICAL_DATA_DIR`에 보관한다. 실행 데이터·개인정보·인증키·환경 파일·로그를 Git에 추가하지 않는다. `examples/medical_web_example.sqlite3`만 기존 합성 설계 예시로 추적한다.
 - 원격의 기존 커밋과 로컬 변경을 확인하고 작업한다. 사용자 요청 없이 강제 푸시하거나 기존 이력을 덮어쓰지 않는다.
+
+- 사용자가 외부 채점용으로 승인한 예외: `tests/data/oasis`의 0001·0010 대상별 aligned_norm.nii.gz와 aligned_seg35.nii.gz, 총 4개 파일은 Git에 추적한다. 그 밖의 영상과 실행 DB는 계속 제외한다.

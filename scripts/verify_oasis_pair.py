@@ -25,12 +25,15 @@ def verify(args):
     root = Path(args.data_root or manifest['ubuntu_root'])
     report = {'version': (PROJECT / 'VERSION').read_text().strip(), 'files': {}, 'checks': []}
     started = time.monotonic()
-    for relative, expected in manifest['files'].items():
+    selected = {manifest[key] for key in ['fixed', 'moving', 'fixed_labels', 'moving_labels']}
+    files = {path: info for path, info in manifest['files'].items()
+             if not args.selected_only or path in selected}
+    for relative, expected in files.items():
         path = root / relative
         assert path.stat().st_size == expected['bytes'], relative
         assert hashlib.sha256(path.read_bytes()).hexdigest() == expected['sha256'], relative
         report['files'][relative] = expected
-    report['checks'].append('24 source file sizes and SHA-256 digests')
+    report['checks'].append(f'{len(files)} source file sizes and SHA-256 digests')
 
     import numpy as np
     import SimpleITK as sitk
@@ -127,6 +130,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--data-root')
     parser.add_argument('--deep-learning', action='store_true')
+    parser.add_argument('--selected-only', action='store_true',
+                        help='Validate only the four Git-distributed grading fixtures')
     parser.add_argument('--output', default='/data/medical-web-v9/oasis-verification.json')
     args = parser.parse_args()
     result = verify(args)
