@@ -100,3 +100,21 @@ class V10(base.Workflow):
   self.assertEqual(owner.get('/api/images/'+unknown+'.nii.gz').status_code,404)
   self.assertEqual(admin.get('/api/images/'+unknown+'.nii.gz').status_code,200)
   self.assertNotIn('old-identifying-name',admin.get('/api/files').text)
+
+ def test_management_mode_blocks_original_pixels(self):
+  owner=self.client('restricted-owner@example.invalid','Private')
+  head=self.client('restricted-head@example.invalid','Private','head')
+  fid=self.fixture(owner)['image_id']
+  self.assertEqual(head.post('/api/auth/mode',json={'clinical':False}).status_code,200)
+  self.assertTrue(head.get('/api/files').json())
+  self.assertEqual(head.get('/api/images/'+fid+'.nii.gz').status_code,403)
+  self.assertEqual(head.post('/api/threshold',json={'image_id':fid}).status_code,403)
+  head.post('/api/auth/mode',json={'clinical':True})
+  self.assertEqual(head.get('/api/images/'+fid+'.nii.gz').status_code,200)
+ def test_seed_supervised_learning(self):
+  owner=self.client('learning-owner@example.invalid','Learning')
+  fid=self.fixture(owner)['image_id']
+  payload={'image_id':fid,'region_method':'seed-logistic','seeds_ras_mm':[[-28.8,-28.8,48]],'background_seeds':[[-2.4,-2.4,4]]}
+  job=self.wait(owner,owner.post('/api/region-growing',json=payload).json()['job_id'])
+  self.assertEqual(job['status'],'done',job)
+  result=job['result'];self.assertLess(result['final_loss'],result['initial_loss']);self.assertGreater(result['foreground_voxels'],0);self.assertFalse(result['pretrained'])

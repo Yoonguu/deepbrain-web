@@ -151,7 +151,7 @@ label.check{display:inline-flex;grid-template-columns:none;gap:4px;margin:0;}
   <h1>Medical Web Prototype · v10</h1>
 </header>
 <nav class="toolbar" aria-label="기능 이동">
-<button data-nav="manager">자료 관리자</button><button data-nav="viewer">영상 보기</button><button data-nav="registration">Registration</button><button data-nav="segmentation" aria-haspopup="true">Segmentation</button><span id="segSubnav" class="subnav" hidden><button data-nav="seg-brain">Brain</button><button data-nav="seg-vessel">Vessel</button></span><button data-nav="tools">측정·도구</button><button data-nav="compare">영상 비교</button><button data-nav="records">소견서·메모</button><span id="who" class="muted"></span><button id="globalReset">보기 초기화</button><button id="logout">로그아웃</button>
+<button data-nav="manager">자료 관리자</button><button data-nav="viewer">영상 보기</button><button data-nav="registration">Registration</button><button data-nav="segmentation" aria-haspopup="true">Segmentation</button><span id="segSubnav" class="subnav" hidden><button data-nav="seg-brain">Brain</button><button data-nav="seg-vessel">Vessel</button></span><button data-nav="tools">측정·도구</button><button data-nav="compare">영상 비교</button><button data-nav="records">소견서·메모</button><span id="who" class="muted"></span><button id="clinicalMode" hidden>진료 모드로 전환</button><button id="globalReset">보기 초기화</button><button id="logout">로그아웃</button>
 </nav><div id="iconBar" hidden aria-label="영상 도구"></div>
 <main id="manager"><aside>
 <section><h2>부서 자료</h2><button id="allFiles">전체 자료</button><div class="row"><button id="originalFiles">원본 영상</button><button id="resultFiles">분석 결과</button><button id="trashFiles" hidden>삭제 목록</button></div><div class="row"><button id="demo" disabled title="현재 제공하지 않는 기능입니다.">합성 영상 추가</button></div><p class="muted">합성 영상은 실제 MRI가 아닙니다.</p></section>
@@ -179,7 +179,7 @@ label.check{display:inline-flex;grid-template-columns:none;gap:4px;margin:0;}
     <section id="imageLoadSection" data-menus="seg-brain seg-vessel">
       <h2>Image 불러오기</h2><label>Image<button type="button" data-filepick="imageFile">파일 선택</button><input type="file" id="imageFile" accept=".nii,.nii.gz" hidden></label>
       <p id="imageInfo" class="muted">자료 관리자에서 Image를 열거나 파일을 선택하세요.</p>
-      <p class="muted">Region Growing은 Seed 기반 통계적 분할입니다. 학습 모델을 사용하지 않습니다.</p>
+      <p class="muted">통계적 Region Growing 또는 전경·배경 Seed로 학습하는 분할 방식을 선택하세요.</p>
     </section>
     <section id="registrationSection" data-menus="registration">
       <h2>Registration <span class="tag">VersorRigid3D · Demons</span></h2>
@@ -215,14 +215,14 @@ label.check{display:inline-flex;grid-template-columns:none;gap:4px;margin:0;}
     <section id="regionSection" data-menus="seg-brain seg-vessel">
       <h2>Region growing <span class="tag">Confidence Connected</span></h2>
       <label>대상 <select id="rgTarget"><option value="image">Image</option></select></label>
-      <label>Multiplier <input type="number" id="rgMult" value="2.5" min="0.1" max="20" step="0.1"></label>
+      <label>방식<select id="regionMethod"><option value="confidence">통계적 Region Growing</option><option value="seed-logistic">Seed 학습 Logistic Regression</option></select></label><p class="muted">학습 방식은 전경·배경 Seed가 모두 필요하며 사전 학습된 해부학 모델은 아닙니다.</p><label>Multiplier <input type="number" id="rgMult" value="2.5" min="0.1" max="20" step="0.1"></label>
       <label>Iterations <input type="number" id="rgIter" value="4" min="0" max="100" step="1"></label>
       <label>Radius <input type="number" id="rgRad" value="1" min="0" max="10" step="1"></label>
       <div class="muted">viewer에서 위치를 클릭한 뒤 Seed 추가</div>
-      <ul class="seeds" id="seedList"></ul>
+      <ul class="seeds" id="seedList"></ul><p class="muted" id="backgroundSeedInfo">배경 Seed: 0개</p>
       <div class="row">
         <button id="addSeed" disabled>현재 위치를 Seed로 추가</button>
-        <button id="clearSeeds">Seed 비우기</button>
+        <button id="addBackgroundSeed">현재 위치를 배경 Seed로 추가</button><button id="clearSeeds">Seed 비우기</button>
       </div>
       <div class="row"><button class="primary run" id="runRg" disabled>Run Segmentation</button></div>
     </section>
@@ -334,6 +334,7 @@ label.check{display:inline-flex;grid-template-columns:none;gap:4px;margin:0;}
   </div>
 </div>
 <div id="tooltip" hidden role="dialog" aria-label="도구 설명"></div><div id="tooltipNested" hidden role="tooltip"></div><div id="radialMenu" hidden><svg id="radialLines"></svg></div><script type="module">
+document.querySelectorAll('[data-nav],#globalReset').forEach(b=>b.disabled=true);
 const APP_BASE=/^\/i\/[^/]+/.exec(location.pathname)?.[0]||'';
 const appPath=(path)=>APP_BASE+path;
 
@@ -360,7 +361,7 @@ async function act(id,fn) {try{await fn();}catch(e){feedback(id,e.message,true);
 currentUser=await api('/api/auth/me');
 
 const $ = (id) => document.getElementById(id);
-const state = { image:null, regResult:null, segResult:null, focusViewer:false, overlayMode:null, catalog:[], baseline:new Map(), fixed: null, moving: null, location: null, seeds: [], busy: false, models: [], initialCal: [], seedOwner: null, lastResult: null };
+const state = { image:null, regResult:null, segResult:null, focusViewer:false, overlayMode:null, catalog:[], baseline:new Map(), fixed: null, moving: null, location: null, backgroundSeeds: [], seeds: [], busy: false, models: [], initialCal: [], seedOwner: null, lastResult: null };
 
 const nv = new Niivue({ backColor: [0.08, 0.09, 0.11, 1], show3Dcrosshair: true, isColorbar: false });
 await nv.attachToCanvas($("gl"));
@@ -419,7 +420,7 @@ function show(baseId,overlayId=null,colormap='red'){
  const task=viewLoadQueue.catch(()=>{}).then(()=>loadView(baseId,overlayId,colormap));viewLoadQueue=task;return task;
 }
 async function loadView(baseId, overlayId = null, colormap = "red") {
-  state.location=null; if(state.viewed!==baseId){state.seeds=[];renderSeeds();} state.viewed=baseId;
+  state.location=null; if(state.viewed!==baseId){points=[];$("pointList").textContent="";state.seeds=[];state.backgroundSeeds=[];renderSeeds();} state.viewed=baseId;
   const volumes = [{ url: imageUrl(baseId), name: `${baseId}.nii.gz`, colormap: "gray" }];
   if (overlayId) {
     volumes.push({ url: imageUrl(overlayId), name: `${overlayId}.nii.gz`, colormap,
@@ -466,7 +467,7 @@ async function upload(role, file) {
     method: "POST", headers: { "Content-Type": "application/octet-stream" }, body: file,
   });
   if (!res.ok) throw new Error(await errorText(res));
-  state[role] = await res.json(); invalidateResults(role); state.seeds=[]; renderSeeds();
+  state[role] = await res.json(); invalidateResults(role); state.seeds=[];state.backgroundSeeds=[]; renderSeeds();
   setStatus(`${role} 업로드 완료`, 1, "ok");
   await show(state[role].image_id);
   refreshButtons();
@@ -540,6 +541,8 @@ $("runVes").onclick = () => runJob("/api/vessel", {
 }, "hot");
 
 function renderSeeds() {
+  $("backgroundSeedInfo").textContent="배경 Seed: "+state.backgroundSeeds.length+"개 · "+JSON.stringify(state.backgroundSeeds);
+  $("seedList").title="배경 Seed "+JSON.stringify(state.backgroundSeeds);
   $("seedList").innerHTML = state.seeds
     .map((s, i) => `<li>#${i + 1} (${s.map((v) => v.toFixed(1)).join(", ")}) mm</li>`).join("");
   refreshButtons();
@@ -550,9 +553,11 @@ $("addSeed").onclick = () => {
   if (!state.seeds.some((s) => s.every((v, i) => Math.abs(v - mm[i]) < 1e-6))) state.seeds.push(mm);
   renderSeeds();
 };
-$("clearSeeds").onclick = () => { state.seeds = []; renderSeeds(); };
+$("addBackgroundSeed").onclick=()=>{if(state.location?.mm&&state.viewed===state.image?.image_id){state.backgroundSeeds.push(Array.from(state.location.mm).slice(0,3));renderSeeds();}};
+$("clearSeeds").onclick = () => {state.backgroundSeeds=[]; state.seeds = []; renderSeeds(); };
 
 $("runRg").onclick = () => runJob("/api/region-growing", {
+  region_method:$("regionMethod").value,background_seeds:state.backgroundSeeds,
   image_id: state[$("rgTarget").value].image_id,
   seeds_ras_mm: state.seeds,
   multiplier: Number($("rgMult").value),
@@ -660,7 +665,9 @@ function applyLabelColors(){
  for(const view of [nv,...grid.cells.map(c=>c.nv)]){const v=view.volumes.find(v=>v.name===result.result_id+'.nii.gz');if(v){v.setColormapLabel(cmap);view.updateGLVolume();}}
  $('labelInfo').textContent=count?`${count}개 영역 · 영역 번호를 골라 색상을 저장하세요.`:'분할된 영역이 없습니다. Threshold 범위 또는 Seed를 조정하세요.';
 }
-$('who').textContent=currentUser.name+' · '+currentUser.department;
+$('who').textContent=currentUser.name+' · '+currentUser.department+(currentUser.role==='head'?(currentUser.clinical?' · 진료 모드':' · 관리 모드'):'');
+$('clinicalMode').hidden=currentUser.role!=='head';$('clinicalMode').textContent=currentUser.clinical?'관리 모드로 전환':'진료 모드로 전환';
+$('clinicalMode').onclick=()=>act('managerStatus',async()=>{await api('/api/auth/mode',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({clinical:!currentUser.clinical})});location.reload();});
 $('membersSection').hidden=currentUser.role!=='head';
 $('trashFiles').hidden=currentUser.role!=='head';
 let lastSeg='seg-brain';
@@ -681,7 +688,7 @@ async function nav(where) {
 }
 document.querySelectorAll('[data-nav]').forEach(b=>b.onclick=()=>act(b.dataset.nav==='compare'?'compareStatus':['manager','records'].includes(b.dataset.nav)?'managerStatus':'statusText',()=>nav(b.dataset.nav)));
 $('logout').onclick=()=>act('managerStatus',async()=>{await api('/api/auth/logout',{method:'POST'});location.href=appPath('/auth');});
-function button(text,fn) {const b=document.createElement('button');b.textContent=text;b.onclick=fn;return b;}
+function button(text,fn) {const b=document.createElement('button');b.disabled=!state.iconsReady;b.textContent=text;b.onclick=fn;return b;}
 let selected=null,reportVersion=0,points=[],fileKind='';
 async function loadFiles() {
  const list=await api('/api/files?q='+encodeURIComponent($('fileSearch').value)); state.catalog=list; $('fileRows').replaceChildren();
@@ -689,10 +696,11 @@ async function loadFiles() {
  const actions=document.createElement('td');
  const relation=document.createElement('div');relation.className='muted';relation.textContent=(f.parents||[]).map(p=>p.role+': '+(list.find(x=>x.id===p.parent_id)?.name||p.parent_id.slice(0,8))).join(' · ');tr.cells[0].append(relation);
  actions.append(button('Image 열기',()=>act('managerStatus',async()=>{state.image={image_id:f.id,name:f.name,...JSON.parse(f.metadata)};invalidateResults('image');await nav('seg-brain');})));
- for(const role of ['fixed','moving']) actions.append(button(role==='fixed'?'Fixed 열기':'Moving 열기',()=>act('managerStatus',async()=>{state[role]={image_id:f.id,name:f.name,...JSON.parse(f.metadata)};invalidateResults(role);state.seeds=[];renderSeeds();await nav('viewer');await show(f.id);refreshButtons();})));
+ for(const role of ['fixed','moving']) actions.append(button(role==='fixed'?'Fixed 열기':'Moving 열기',()=>act('managerStatus',async()=>{state[role]={image_id:f.id,name:f.name,...JSON.parse(f.metadata)};invalidateResults(role);state.seeds=[];state.backgroundSeeds=[];renderSeeds();await nav('viewer');await show(f.id);refreshButtons();})));
  if(f.kind==='result')actions.append(button('결과 보기',()=>act('managerStatus',()=>openStoredResult(f))));
  actions.append(button('소견 작성',()=>act('recordStatus',async()=>{await loadRecords(f);await nav('records');})));
  if(f.can_delete||currentUser.role==='head')actions.append(button('삭제',()=>act('managerStatus',async()=>{if(!confirm('자료를 삭제 목록으로 이동할까요?'))return;await api('/api/files/'+f.id,{method:'DELETE'});await loadFiles();feedback('managerStatus','자료를 삭제 목록으로 이동했습니다.');})));
+ if(currentUser.role==='head'&&!currentUser.clinical&&currentUser.department!=='공개 데모')for(const control of actions.children)if(['Image 열기','Fixed 열기','Moving 열기','결과 보기'].includes(control.textContent)){control.disabled=true;control.title='진료 모드로 전환한 뒤 여세요.';}
  tr.append(actions);$('fileRows').append(tr); }
  if(!list.length) feedback('managerStatus','검색된 자료가 없습니다.');
 }
@@ -723,7 +731,7 @@ $('globalReset').onclick=resetWorkspace;
 $('thresholdLow').oninput=$('thresholdHigh').oninput=e=>{e.target.dataset.edited='1';};
 $('gl').addEventListener('dblclick',e=>{if(nv.opts.sliceType!==nv.sliceTypeMultiplanar){nv.setSliceType(nv.sliceTypeMultiplanar);return;}const rect=$('gl').getBoundingClientRect(),x=(e.clientX-rect.left)*$('gl').width/rect.width,y=(e.clientY-rect.top)*$('gl').height/rect.height;const tile=nv.screenSlices.find(t=>{const [l,top,w,h]=t.leftTopWidthHeight;return x>=l&&x<l+w&&y>=top&&y<top+h;});if(tile)nv.setSliceType(tile.axCorSag);});
 $('overlayMoving').onclick=()=>act('statusText',async()=>{if(!state.fixed||!state.moving)throw new Error('Fixed와 Moving을 불러오세요.');state.overlayMode='moving';await show(state.fixed.image_id,state.moving.image_id);});
-$('modalityFile').onchange=e=>act('toolStatus',async()=>{const f=e.target.files[0];if(!f)return;const image=await api('/api/images?name='+encodeURIComponent(f.name),{method:'POST',body:f});await nv.addVolumeFromUrl({url:imageUrl(image.image_id),name:image.image_id+'.nii.gz',colormap:'gray',opacity:.5});state.initialCal=nv.volumes.map(v=>[v.cal_min,v.cal_max]);if(inspector.open)renderInspector();refreshButtons();});
+$('modalityFile').onchange=e=>act('toolStatus',async()=>{const f=e.target.files[0];if(!f)return;const image=await api('/api/images?name='+encodeURIComponent(f.name),{method:'POST',body:f});await nv.addVolumeFromUrl({url:imageUrl(image.image_id),name:image.image_id+'.nii.gz',colormap:'gray',opacity:.5});state.initialCal=nv.volumes.map(v=>[v.cal_min,v.cal_max]);for(const v of nv.volumes)if(!state.baseline.has(v.name))state.baseline.set(v.name,{min:v.cal_min,max:v.cal_max,colormap:v.colormap});if(inspector.open)renderInspector();refreshButtons();});
 $('capturePoint').onclick=()=>{if(state.location?.mm&&!!state.viewed){points.push(Array.from(state.location.mm).slice(0,3));points=points.slice(-100);$('pointList').textContent=JSON.stringify(points);}};
 $('clearPoints').onclick=()=>{points=[];$('pointList').textContent='';};
 $('measure').onclick=()=>act('toolStatus',async()=>{if(!state.viewed||!points.length)throw new Error('영상과 측정점을 선택하세요.');showResult(await api('/api/tools/measure',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image_id:state.viewed,points:points.slice(-3),radius:Number($('roiRadius').value)})}));feedback('toolStatus','측정 완료 · 결과 영역 확인');});
@@ -1060,7 +1068,7 @@ for(const [id,mode]of [['distanceMode','distance'],['angleMode','angle'],['roiMo
 $('dragSelect').addEventListener('change',()=>{measurements.select(null);nv.setDrawingEnabled(false);syncIcons();});
 document.querySelectorAll('[data-filepick]').forEach(button=>button.onclick=()=>$(button.dataset.filepick).click());
 $('recordsSection').hidden=true;
-state.iconsReady=true;renderBar();
+state.iconsReady=true;renderBar();document.querySelectorAll('[data-nav],#globalReset').forEach(b=>b.disabled=false);await loadFiles();document.body.dataset.ready='true';
 // Active indicators track actual modes even when the same control is used outside the icon bar.
 document.addEventListener('click',()=>queueMicrotask(syncIcons));
 document.addEventListener('change',()=>queueMicrotask(syncIcons));

@@ -9,7 +9,9 @@ class Workflow(unittest.TestCase):
  def client(self,email,department='A',role='doctor',approved=1):
   with store.connect() as c:c.execute('INSERT OR IGNORE INTO users VALUES(?,?,?,?,?,?,?)',(email,email,email,department,role,approved,store.password('long-demo-password')))
   cl=TestClient(app);r=cl.post('/api/auth/login',json={'email':email,'password':'long-demo-password'});self.assertEqual(r.status_code,200)
-  me=cl.get('/api/auth/me').json();cl.headers['X-CSRF-Token']=me['csrf'];return cl
+  me=cl.get('/api/auth/me').json();cl.headers['X-CSRF-Token']=me['csrf'];
+  if role=='head':self.assertEqual(cl.post('/api/auth/mode',json={'clinical':True}).status_code,200)
+  return cl
  def fixture(self,cl):
   import numpy as np
   import SimpleITK as sitk

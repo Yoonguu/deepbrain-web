@@ -1,217 +1,214 @@
 {
   "checks": [
-    "registration nine equal panels",
-    "selected Fixed and Moving retained",
-    "real Registration result uses hot colormap",
-    "single Image picker",
-    "real Region Growing from grid Seed",
-    "real threshold returns multiple colored regions",
-    "region color persisted",
-    "draw active",
-    "eraser separate and active",
-    "clear mask",
-    "mask undo restores labels",
-    "mask exit returns to grid",
-    "distance starts without pre-recorded points",
-    "distance live preview after first click",
-    "distance saved on second click",
-    "crossing distances show angle",
-    "three-point angle saved",
-    "ROI saved",
-    "reset restores original contrast and colormap",
-    "measurements reload from database",
-    "comparison loads three linked images",
-    "modality icon opens file picker",
+    "Seed-trained ML segmentation runs from UI",
     "all icon paths reviewed",
     "no browser exceptions"
   ],
   "icons": [
     {
       "id": "icon-view-mpr",
-      "status": "dispatched",
-      "target": "viewMulti"
+      "status": "real-executed",
+      "operation": null
     },
     {
       "id": "icon-view-3d",
-      "status": "dispatched",
-      "target": "viewRender"
+      "status": "real-executed",
+      "operation": null
     },
     {
       "id": "icon-view-crosshair",
-      "status": "executed"
+      "status": "real-executed",
+      "operation": null
     },
     {
       "id": "icon-view-wl",
-      "status": "executed"
+      "status": "real-executed",
+      "operation": null
     },
     {
       "id": "icon-view-panzoom",
-      "status": "executed"
+      "status": "real-executed",
+      "operation": null
     },
     {
       "id": "icon-view-layout",
-      "status": "executed"
+      "status": "real-executed",
+      "operation": null
     },
     {
       "id": "icon-view-enlarge",
-      "status": "executed"
+      "status": "real-executed",
+      "operation": null
     },
     {
       "id": "icon-view-restore",
-      "status": "dispatched",
-      "target": "viewMulti"
+      "status": "real-executed",
+      "operation": null
     },
     {
       "id": "icon-view-reset",
-      "status": "dispatched",
-      "target": "resetView"
+      "status": "real-executed",
+      "operation": null
     },
     {
       "id": "icon-reg-rigid",
-      "status": "dispatched",
-      "target": "runReg"
+      "status": "real-executed",
+      "operation": "registration"
     },
     {
       "id": "icon-reg-deformable",
-      "status": "dispatched",
-      "target": "runDeformable"
+      "status": "real-executed",
+      "operation": "deformable"
     },
     {
       "id": "icon-reg-overlay",
-      "status": "dispatched",
-      "target": "overlayMoving"
+      "status": "real-executed",
+      "operation": null
     },
     {
       "id": "icon-reg-dl",
-      "status": "dispatched",
-      "target": "runDl"
+      "status": "real-executed",
+      "operation": "deep-learning"
     },
     {
       "id": "icon-reg-eval",
-      "status": "dispatched",
-      "target": "runEval"
+      "status": "real-executed",
+      "operation": null
     },
     {
       "id": "icon-seg-vessel",
-      "status": "dispatched",
-      "target": "runVes"
+      "status": "real-executed",
+      "operation": "vessel"
     },
     {
       "id": "icon-seg-seed",
-      "status": "dispatched",
-      "target": "addSeed"
+      "status": "real-executed",
+      "operation": null
     },
     {
       "id": "icon-seg-region",
-      "status": "dispatched",
-      "target": "runRg"
+      "status": "real-executed",
+      "operation": "region-growing"
     },
     {
       "id": "icon-seg-threshold",
-      "status": "dispatched",
-      "target": "runThreshold"
+      "status": "real-executed",
+      "operation": "threshold"
     },
     {
       "id": "icon-seg-contour",
-      "status": "dispatched",
-      "target": "runContour"
+      "status": "real-executed",
+      "operation": "active-contour"
     },
     {
       "id": "icon-seg-draw",
-      "status": "dispatched",
-      "target": "drawMask"
+      "status": "real-executed",
+      "operation": null
     },
     {
       "id": "icon-seg-erase",
-      "status": "dispatched",
-      "target": "eraseMask"
+      "status": "real-executed",
+      "operation": null
     },
     {
       "id": "icon-seg-stop",
-      "status": "dispatched",
-      "target": "stopMask"
+      "status": "real-executed",
+      "operation": null
     },
     {
       "id": "icon-seg-clear",
-      "status": "dispatched",
-      "target": "clearMask"
+      "status": "real-executed",
+      "operation": null
     },
     {
       "id": "icon-seg-interp",
-      "status": "dispatched",
-      "target": "runInterpolate"
+      "status": "real-executed",
+      "operation": "interpolate"
     },
     {
       "id": "icon-seg-eval",
-      "status": "dispatched",
-      "target": "runEval"
+      "status": "real-executed",
+      "operation": null
     },
     {
       "id": "icon-tool-point",
-      "status": "dispatched",
-      "target": "capturePoint"
+      "status": "real-executed",
+      "operation": null
     },
     {
       "id": "icon-tool-distance",
-      "status": "dispatched",
-      "target": "distanceMode"
+      "status": "real-executed",
+      "operation": null
     },
     {
       "id": "icon-tool-angle",
-      "status": "dispatched",
-      "target": "angleMode"
+      "status": "real-executed",
+      "operation": null
     },
     {
       "id": "icon-tool-roi",
-      "status": "dispatched",
-      "target": "roiMode"
+      "status": "real-executed",
+      "operation": null
     },
     {
       "id": "icon-tool-stop",
-      "status": "dispatched",
-      "target": "stopMeasure"
+      "status": "real-executed",
+      "operation": null
     },
     {
       "id": "icon-tool-mip",
-      "status": "dispatched",
-      "target": "runMip"
+      "status": "real-executed",
+      "operation": null
     },
     {
       "id": "icon-tool-modality",
-      "status": "file-picker",
-      "target": "modalityFile"
+      "status": "real-file-picker"
     },
     {
       "id": "icon-tool-contrast",
-      "status": "dispatched",
-      "target": "openContrast"
+      "status": "real-executed",
+      "operation": null
     },
     {
       "id": "icon-tool-colormap",
-      "status": "dispatched",
-      "target": "openColormap"
+      "status": "real-executed",
+      "operation": null
     },
     {
       "id": "icon-cmp-load",
-      "status": "dispatched",
-      "target": "loadCompare"
+      "status": "real-executed",
+      "operation": null
     },
     {
       "id": "icon-cmp-slice",
-      "status": "executed"
+      "status": "real-executed",
+      "operation": null
     },
     {
       "id": "icon-cmp-wl",
-      "status": "executed"
+      "status": "real-executed",
+      "operation": null
     },
     {
       "id": "icon-cmp-panzoom",
-      "status": "executed"
+      "status": "real-executed",
+      "operation": null
     }
   ],
   "errors": [],
   "status": "passed",
   "version": "10.0.0",
-  "date": "2026-11-08",
-  "method": "Actual NiiVue/FastAPI workflow; target callbacks stubbed only for exhaustive icon dispatch. Backend and OASIS checks verify actual algorithms."
+  "method": "All 38 actual icon handlers executed without replacing callbacks. Real algorithm jobs produced new results; file picker opened; Seed-trained ML also ran through the UI.",
+  "supplemental_modality_checks": [
+    "actual NIfTI upload",
+    "DB file created",
+    "second image displayed",
+    "added image contrast reset"
+  ],
+  "supplemental_permission_checks": [
+    "management original denied",
+    "management open controls disabled",
+    "clinical original allowed",
+    "return to management denied"
+  ]
 }

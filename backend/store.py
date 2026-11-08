@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS report_history(id INTEGER PRIMARY KEY,file_id TEXT,bo
 CREATE TABLE IF NOT EXISTS notes(id INTEGER PRIMARY KEY,file_id TEXT REFERENCES files(id),author TEXT REFERENCES users(id),body TEXT NOT NULL,created REAL NOT NULL);
 CREATE TABLE IF NOT EXISTS file_access(file_id TEXT PRIMARY KEY REFERENCES files(id),owner_id TEXT,public_demo INTEGER NOT NULL DEFAULT 0);
 CREATE TABLE IF NOT EXISTS file_links(child_id TEXT REFERENCES files(id),parent_id TEXT REFERENCES files(id),role TEXT NOT NULL,PRIMARY KEY(child_id,parent_id,role));
+CREATE TABLE IF NOT EXISTS clinical_sessions(token TEXT PRIMARY KEY REFERENCES sessions(token) ON DELETE CASCADE);
 CREATE TABLE IF NOT EXISTS measurements(id TEXT PRIMARY KEY,file_id TEXT REFERENCES files(id),author TEXT REFERENCES users(id),payload TEXT NOT NULL,created REAL NOT NULL);
 CREATE TABLE IF NOT EXISTS audit(id INTEGER PRIMARY KEY,actor TEXT,action TEXT,object_id TEXT,created REAL);
 ''')

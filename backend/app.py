@@ -32,7 +32,8 @@ def identity(request:Request):
  with store.connect() as c:
   row=c.execute('SELECT u.*,s.csrf FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token=? AND s.expires>?',(store.digest(token),time.time())).fetchone()
  if not row: fail(401,'로그인이 필요합니다.')
- return dict(row)
+ with store.connect() as c: clinical=c.execute('SELECT 1 FROM clinical_sessions WHERE token=?',(store.digest(token),)).fetchone()
+ return dict(row,clinical=bool(clinical) or row['role']!='head')
 def approved(request:Request):
  u=identity(request)
  if not u['approved']: fail(403,'부서 소속 확인 후 이용할 수 있습니다.')
@@ -99,7 +100,17 @@ def login(req:Request,p:Credentials):
  response=JSONResponse({'ok':True}); response.set_cookie('session',token,max_age=7*86400,httponly=True,secure=SECURE,samesite='strict'); return response
 @app.get('/api/auth/me')
 def me(req:Request):
- u=identity(req); return {k:u[k] for k in ('id','name','department','role','approved','csrf')}
+ u=identity(req); return {k:u[k] for k in ('id','name','department','role','approved','csrf','clinical')}
+class ClinicalMode(BaseModel): clinical:bool
+@app.post('/api/auth/mode')
+def clinical_mode(req:Request,p:ClinicalMode,u=Depends(approved)):
+ if u['role']!='head': fail(403,'관리자만 관리/진료 모드를 전환합니다.')
+ token=store.digest(req.cookies.get('session',''))
+ with store.connect() as c:
+  if p.clinical: c.execute('INSERT OR IGNORE INTO clinical_sessions VALUES(?)',(token,))
+  else: c.execute('DELETE FROM clinical_sessions WHERE token=?',(token,))
+ store.audit(u['id'],'clinical_mode' if p.clinical else 'management_mode',u['id'])
+ return {'clinical':p.clinical}
 @app.post('/api/auth/logout')
 def logout(req:Request):
  with store.connect() as c: c.execute('DELETE FROM sessions WHERE token=?',(store.digest(req.cookies.get('session','')),))
@@ -134,7 +145,10 @@ def file_for(fid,u):
  with store.connect() as c: access=c.execute('SELECT * FROM file_access WHERE file_id=?',(fid,)).fetchone()
  if u['role']!='head' and (not access or (access['owner_id']!=u['id'] and not access['public_demo'])): fail(404,'접근할 수 없는 자료입니다.')
  return dict(row,owner_id=access['owner_id'] if access else None,can_delete=u['role']=='head' or bool(access and access['owner_id']==u['id']))
-def path_for(fid,u): file_for(fid,u); return IMAGES/(fid+'.nii.gz')
+def path_for(fid,u):
+ row=file_for(fid,u)
+ if row['kind']=='original' and u['role']=='head' and not u.get('clinical',False) and u['department']!='공개 데모': fail(403,'관리 모드에서는 원본 영상을 열 수 없습니다. 진료 모드로 전환하세요.')
+ return IMAGES/(fid+'.nii.gz')
 def add_file(fid,u,name,kind='original',base=None,parents=None):
  img=sitk.ReadImage(str(IMAGES/(fid+'.nii.gz')))
  meta={'size':list(img.GetSize()),'spacing':list(img.GetSpacing())}
@@ -260,6 +274,8 @@ class Operation(BaseModel):
  start:int=Field(0,ge=0); end:int=Field(10,ge=0)
  lower:float=0; upper:float=100
  model_id:str=Field('lfcamorph-oasis',max_length=64)
+ region_method:str=Field('confidence',pattern='^(confidence|seed-logistic)$')
+ background_seeds:list[Annotated[list[float],Field(min_length=3,max_length=3)]]=Field(default_factory=list,max_length=100)
 
 def put_job(j,u):
  with store.connect() as c: c.execute('INSERT OR REPLACE INTO jobs VALUES(?,?,?)',(j['job_id'],u['department'],json.dumps(j)))
@@ -290,7 +306,11 @@ def run(kind:str,p:Operation,u=Depends(approved)):
    elif kind=='deformable': result=classic.deformable_registration(inp,moving,out,IMAGES/(fid+'.tfm'),p.iterations_per_level,progress)
    elif kind=='deep-learning': result=dl_models.DeepLearningRegistration(p.model_id).predict(inp,moving,out,IMAGES/(fid+'.field.nii.gz'),progress)
    elif kind=='vessel': result=HessianVesselness(p.sigma,p.alpha1,p.alpha2).run(inp,out,progress)
-   elif kind=='region-growing': result=ConfidenceConnectedSegmentation(p.multiplier,p.iterations,p.radius).run(inp,p.seeds_ras_mm,out,progress)
+   elif kind=='region-growing':
+    if p.region_method=='seed-logistic':
+     from .algorithms.seed_learning import seeded_logistic
+     result=seeded_logistic(inp,p.seeds_ras_mm,p.background_seeds,out,progress)
+    else: result=ConfidenceConnectedSegmentation(p.multiplier,p.iterations,p.radius).run(inp,p.seeds_ras_mm,out,progress)
    else:
     image=sitk.ReadImage(str(inp),sitk.sitkFloat32); result={}
     if kind=='mip': image,result=classic.maximum_intensity_projection(image,p.start,p.end)

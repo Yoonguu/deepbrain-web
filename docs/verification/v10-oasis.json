@@ -123,15 +123,15 @@
       160,
       192
     ],
-    "runtime_s": 8.21,
+    "runtime_s": 8.12,
     "displacement_max_mm": 12.271093544910519,
     "displacement_mean_mm": 1.6567531188084992,
     "jacobian_nonpositive_percent": 0.0005231584821428571,
     "notes": [],
     "operation": "deep-learning",
     "parameters": {
-      "fixed_id": "42d95f421085b0552338e453bbdcca65",
-      "moving_id": "fc1fa6dbad3b41da7821f2b4c3615fca",
+      "fixed_id": "0195c59289d0d8b0162d3ee9caa230fe",
+      "moving_id": "f17d64e28f9539eb20dc94e8a9e1c0af",
       "image_id": null,
       "metric": "mattes",
       "iterations_per_level": 150,
@@ -147,11 +147,13 @@
       "end": 10,
       "lower": 0,
       "upper": 100,
-      "model_id": "lfcamorph-oasis"
+      "model_id": "lfcamorph-oasis",
+      "region_method": "confidence",
+      "background_seeds": []
     },
-    "base_id": "42d95f421085b0552338e453bbdcca65",
-    "result_id": "b57e31b66ad5ed6bfdde10d3902ef268",
-    "image_id": "b57e31b66ad5ed6bfdde10d3902ef268",
+    "base_id": "0195c59289d0d8b0162d3ee9caa230fe",
+    "result_id": "334ad909211489d6456eaef665dc81a0",
+    "image_id": "334ad909211489d6456eaef665dc81a0",
     "name": "deep-learning(lfcamorph-oasis) 결과",
     "size": [
       160,
@@ -192,5 +194,5 @@
     }
   },
   "status": "passed",
-  "runtime_s": 19.26
+  "runtime_s": 19.41
 }

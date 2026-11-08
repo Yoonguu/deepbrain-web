@@ -159,7 +159,7 @@ def deformable_registration(
     field = demons.Execute(fixed, matched)
     field = sitk.Cast(field, sitk.sitkVectorFloat64)
 
-    jacobian = sitk.GetArrayViewFromImage(sitk.DisplacementFieldJacobianDeterminant(field))
+    jacobian = sitk.GetArrayFromImage(sitk.DisplacementFieldJacobianDeterminant(field))
     folding = float(np.mean(jacobian <= 0) * 100.0)
     magnitude = np.linalg.norm(sitk.GetArrayViewFromImage(field), axis=-1)
 

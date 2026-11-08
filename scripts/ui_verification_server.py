@@ -22,6 +22,10 @@ with store.connect() as c:
 manifest=json.loads((root/'tests/data/oasis_pair.json').read_text());ids={}
 for role in ['fixed','moving','fixed_labels','moving_labels']:
  fid=secrets.token_hex(16);shutil.copyfile(root/'tests/data/oasis'/manifest[role],IMAGES/(fid+'.nii.gz'));add_file(fid,user,role);ids[role]=fid
+# Sparse two-slice mask used to exercise interpolation through the actual UI.
+import numpy as np
+array=np.zeros((48,48,48),dtype=np.uint8);array[10,15:30,15:30]=1;array[30,17:28,17:28]=1
+sparse=sitk.GetImageFromArray(array);fid=secrets.token_hex(16);sitk.WriteImage(sparse,str(IMAGES/(fid+'.nii.gz')));add_file(fid,user,'interpolation fixture');ids['sparse']=fid
 session=Path(args.session_file);session.parent.mkdir(parents=True,exist_ok=True)
 session.write_text(json.dumps({'fixture_server':True,'email':'v10-ui@example.invalid','password':secret,'ids':ids}));session.chmod(0o600)
 import uvicorn

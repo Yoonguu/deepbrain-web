@@ -8,15 +8,16 @@ const {chromium}=require('playwright'),fs=require('fs'),assert=require('assert')
  const config=JSON.parse(fs.readFileSync(process.env.MEDICAL_UI_SESSION));
  assert(config.fixture_server,'An isolated UI fixture session is required.');
  const browser=await chromium.launch({args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
- const context=await browser.newContext({viewport:{width:1600,height:1100},ignoreHTTPSErrors:true});const p=await context.newPage();const errors=[],report={checks:[],icons:[]};
+ const context=await browser.newContext({viewport:{width:1600,height:1100},ignoreHTTPSErrors:true});const p=await context.newPage();p.setDefaultTimeout(30000);const errors=[],report={checks:[],icons:[]};
  p.on('pageerror',e=>{errors.push(String(e));console.log('PAGE ERROR',String(e))});p.on('dialog',d=>d.accept());
  if(process.env.NIIVUE_ESM_PATH)await p.route('https://cdn.jsdelivr.net/npm/@niivue/niivue@0.42.0/+esm',r=>r.fulfill({contentType:'text/javascript',body:fs.readFileSync(process.env.NIIVUE_ESM_PATH,'utf8')}));
  await p.route(base+'/',async route=>{const response=await route.fetch();let html=await response.text();html=html.replace('</script>',`window.__app={state,nv,grid,measurements,definitions,execute,conditions,iconActive,show,nav,resetWorkspace,inspector,applyLayer,layerSettings};</script>`);await route.fulfill({response,body:html});});
- const res=await context.request.post(base+'/api/auth/login',{data:{email:config.email,password:config.password}});assert(res.ok());
+ const res=await context.request.post(base+'/api/auth/login',{data:{email:config.email,password:config.password}});assert(res.ok());const me=await (await context.request.get(base+'/api/auth/me')).json();await context.request.post(base+'/api/auth/mode',{headers:{'X-CSRF-Token':me.csrf},data:{clinical:true}});
  await p.goto(base+'/');await p.waitForFunction(()=>window.__app);const ids=config.ids;
  const check=(name,value)=>{assert(value,name);report.checks.push(name);console.log('PASS',name)};
  await p.locator('#fileRows tr[data-file-id="'+ids.fixed+'"]').getByText('Fixed 열기',{exact:true}).click();await p.waitForFunction(()=>__app.nv.volumes.length===1);
  await p.locator('[data-nav=manager]').click();await p.locator('#fileRows tr[data-file-id="'+ids.moving+'"]').getByText('Moving 열기',{exact:true}).click();await p.waitForTimeout(600);
+ if(!process.env.MEDICAL_UI_SWEEP_ONLY){
  await p.locator('[data-nav=registration]').click();await p.waitForFunction(()=>__app.grid.cells.length===9&&__app.grid.cells.filter(c=>c.nv.volumes.length).length>=6);await p.waitForTimeout(500);
  check('registration nine equal panels',await p.locator('#imageGrid .image-cell').evaluateAll(nodes=>nodes.length===9&&Math.max(...nodes.map(n=>n.getBoundingClientRect().height))-Math.min(...nodes.map(n=>n.getBoundingClientRect().height))<=1));
  check('selected Fixed and Moving retained',await p.locator('#idInfo').evaluate(e=>e.textContent.includes('160×192×224')&&!e.textContent.includes('Moving: -')));
@@ -62,16 +63,42 @@ const {chromium}=require('playwright'),fs=require('fs'),assert=require('assert')
  await p.locator('[data-nav=compare]').click();await p.click('#loadCompare');await p.waitForFunction(()=>document.getElementById('compareStatus').textContent.includes('완료'));
  check('comparison loads three linked images',await p.locator('#comparePanels canvas').count()===3);
  await p.locator('[data-nav=tools]').click();const chooserPromise=p.waitForEvent('filechooser');await p.click('#icon-tool-modality');const chooser=await chooserPromise;check('modality icon opens file picker',await chooser.element().getAttribute('id')==='modalityFile');await chooser.setFiles([]);
- // Every icon's enabled and refusal path is audited. Backend execution is covered separately;
- // stub only the target callback to isolate dispatch from long-running algorithms here.
- for(const id of await p.evaluate(()=>__app.definitions.map(d=>d.id))){
-  const row=await p.evaluate(async id=>{const a=__app,d=a.definitions.find(x=>x.id===id);await a.nav(d.group==='reg'?'registration':d.group==='seg'?'seg-vessel':d.group==='cmp'?'compare':d.group==='view'?'viewer':'tools');
-    if(['point','seed','region','contour'].includes(d.key)){a.state.location={mm:Array.from(a.nv.frac2mm(a.nv.scene.crosshairPos)).slice(0,3)};if(['region','contour'].includes(d.key)&&!a.state.seeds.length)a.state.seeds=[a.state.location.mm];document.getElementById('addSeed').disabled=false;document.getElementById('runRg').disabled=false;}
-    const reasons=a.conditions(d);if(reasons.length){let rejected=false;try{await a.execute(d)}catch{rejected=true}return {id,status:rejected?'gated':'FAIL',reasons};}
-    if(d.target){const el=document.getElementById(d.target);if(el.type==='file'){return {id,status:'file-picker',target:d.target};}const old=el.onclick;let called=false;el.onclick=()=>{called=true};try{await a.execute(d);}finally{el.onclick=old;}return {id,status:called?'dispatched':'FAIL',target:d.target};}
-    await a.execute(d);return {id,status:'executed'};
-  },id);report.icons.push(row);assert(row.status!=='FAIL',id);
  }
+ // Exercise every real icon action; no target callbacks are replaced.
+ for(const id of await p.evaluate(()=>__app.definitions.map(d=>d.id))){
+  if(id==='icon-tool-modality'){
+   await p.evaluate(()=>__app.nav('tools'));const nextChooser=p.waitForEvent('filechooser');await p.click('#icon-tool-modality');await (await nextChooser).setFiles([]);report.icons.push({id,status:'real-file-picker'});continue;
+  }
+  const row=await p.evaluate(async ({id,ids})=>{
+   const a=__app,d=a.definitions.find(x=>x.id===id);
+   if(d.group==='reg'){
+    a.state.fixed={image_id:ids.fixed,name:'Fixed',size:[160,192,224]};a.state.moving={image_id:ids.moving,name:'Moving',size:[160,192,224]};document.getElementById('regIter').value='2';
+   }
+   if(d.group==='seg'){
+    const target=d.key==='interp'?ids.sparse:ids.fixed;
+    a.state.image={image_id:target,name:'Image'};await a.show(target);
+    if(['draw','erase','clear'].includes(d.key))a.state.segResult={operation:'manual-mask',base_id:target,result_id:ids.fixed_labels,label_count:35};
+   }
+   await a.nav(d.group==='reg'?'registration':d.group==='seg'?'seg-vessel':d.group==='cmp'?'compare':d.group==='view'?'viewer':'tools');
+   if(['point','seed','region','contour'].includes(d.key)){
+    a.state.location={mm:Array.from(a.nv.frac2mm(a.nv.scene.crosshairPos)).slice(0,3)};
+    if(['region','contour'].includes(d.key))a.state.seeds=[a.state.location.mm];
+    document.getElementById('addSeed').disabled=false;document.getElementById('runRg').disabled=false;document.getElementById('contourIter').value='2';
+   }
+   if(d.key==='eval'){document.getElementById('evalPred').value='fixed';document.getElementById('evalRef').value='fixed';}
+   const reasons=a.conditions(d);if(reasons.length)throw Error(id+': '+reasons.join(';'));
+   const previous=a.state.lastResult;await a.execute(d);
+   const kind={rigid:'registration',deformable:'deformable',dl:'deep-learning',vessel:'vessel',region:'region-growing',threshold:'threshold',contour:'active-contour',interp:'interpolate'}[d.key];
+   if(kind&&(!a.state.lastResult||a.state.lastResult===previous))throw Error(id+' did not generate a new result: '+document.getElementById('statusText').textContent);
+   if(kind&&!(a.state.regResult?.operation===kind||a.state.segResult?.operation===kind))throw Error(id+' wrong operation result');
+   if(['mpr','3d','enlarge','restore'].includes(d.key)&&a.nv.opts.sliceType!==({mpr:3,'3d':4,enlarge:0,restore:3}[d.key]))throw Error(id+' wrong display mode');
+   if(['distance','angle','roi'].includes(d.key)&&a.measurements.mode!==d.key)throw Error(id+' wrong measurement mode');
+   return {id,status:'real-executed',operation:kind||null};
+  },{id,ids});report.icons.push(row);console.log('ICON',id,row.status);
+ }
+ await p.evaluate(async ids=>{const a=__app;a.state.image={image_id:ids.fixed,name:'Image'};await a.nav('seg-brain');await a.show(ids.fixed);a.state.seeds=[Array.from(a.nv.frac2mm([.5,.5,.5])).slice(0,3)];a.state.location={mm:Array.from(a.nv.frac2mm([.05,.05,.05])).slice(0,3)};},ids);
+ await p.selectOption('#regionMethod','seed-logistic');await p.click('#addBackgroundSeed');await p.click('#icon-seg-region');await p.waitForFunction(()=>__app.state.segResult?.method==='seed-supervised-logistic-regression'&&!__app.state.busy,null,{timeout:120000});
+ check('Seed-trained ML segmentation runs from UI',await p.evaluate(()=>__app.state.segResult.final_loss<__app.state.segResult.initial_loss));
  check('all icon paths reviewed',report.icons.length===await p.evaluate(()=>__app.definitions.length));
  check('no browser exceptions',errors.length===0);report.errors=errors;report.status='passed';fs.writeFileSync(path.join(output,'ui-report.json'),JSON.stringify(report,null,2));
  await browser.close();console.log('ICONS',report.icons.length);

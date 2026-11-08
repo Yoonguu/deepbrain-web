@@ -76,6 +76,7 @@ def verify(args):
                 'email': 'oasis-test@example.invalid', 'password': secret})
             response.raise_for_status()
             client.headers['X-CSRF-Token'] = client.get('/api/auth/me').json()['csrf']
+            client.post('/api/auth/mode',json={'clinical':True}).raise_for_status()
             response = client.get('/api/images/' + ids['fixed'] + '.nii.gz')
             response.raise_for_status()
             assert response.content == (root / manifest['fixed']).read_bytes()
