@@ -1,6 +1,6 @@
 # Deepbrain Web v10
 
-버전 `10.0.0`. GitHub 대상은 `white`, Ubuntu 소스는 `/data/medical-web-v10/medical-web`이다. 변경 내용은 [V10_CHANGES.md](V10_CHANGES.md), 실행 방법은 [DEPLOYMENT.md](DEPLOYMENT.md)를 참조한다.
+버전 `10.0.0`. GitHub 대상은 `white`, Ubuntu 소스는 `/data/medical-web-v10/medical-web`이다. 변경 내용은 [V10_CHANGES.md](docs/V10_CHANGES.md), 실행 방법은 [DEPLOYMENT.md](docs/DEPLOYMENT.md)를 참조한다.
 
 ## 사용 흐름
 
@@ -48,7 +48,7 @@ python scripts/verify_oasis_pair.py --data-root tests/data/oasis --selected-only
 
 외부 채점용 OASIS 영상·라벨 4개는 [tests/data/oasis](tests/data/oasis/README.md)에 있다. 다른 실행 영상·DB·인증 정보는 Git에 포함하지 않는다.
 
-과거 버전 기록: [v9](V9_CHANGES.md), [v8](V8_CHANGES.md), [v7](V7_CHANGES.md).
+과거 버전 기록: [v9](docs/V9_CHANGES.md), [v8](docs/V8_CHANGES.md), [v7](docs/V7_CHANGES.md).
 
 
 아이콘 예시 38개를 실제 앱에서 촬영했다. `frontend/previews`에 GIF·VP9 WebM·PNG가 각각 38개 있으며, 툴팁에서 재생하고 GIF를 내려받을 수 있다. 상세 제작 규격은 [예시 안내](frontend/previews/README.md), 무결성과 검증 기록은 `docs/verification/v10-previews.json`을 참조한다. 모션 감소 설정에서는 PNG를 사용한다.

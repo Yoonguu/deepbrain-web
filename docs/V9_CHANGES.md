@@ -4,7 +4,7 @@
 
 - 입력: 사용자 제공 `medical-web-v8.zip` (SHA-256 `17eee980689c89a286cad18602f4f4a15fb301ca717a759229560b05993022db`).
 - 버전: `9.0.0`. 원격에는 `white` 브랜치만 푸시한다. 다른 브랜치와 기존 태그는 유지한다.
-- 스타일: `DESIGN_STYLE.md` v2.2. 추가 제공된 텍스트와 ZIP의 규격은 마지막 줄바꿈을 제외하면 동일하다.
+- 스타일: [DESIGN_STYLE.md](DESIGN_STYLE.md) v2.2. 추가 제공된 텍스트와 ZIP의 규격은 마지막 줄바꿈을 제외하면 동일하다.
 - 개정 v8의 메뉴, Deep Learning 모델 선택, Layer Inspector, 평가 지표와 사용자 preset을 반영한다. 세부 변경은 [V8_CHANGES.md](V8_CHANGES.md)에 보존한다.
 
 ## 검토 후 수정
@@ -32,8 +32,8 @@
 - `python -m unittest discover -s tests -v`: 22개 통과. 비대칭 표면 회귀 테스트는 수정 전 HD95 3.8mm로 실패한 뒤, 수정 후 기대값 3.7mm로 통과했다.
 - `python scripts/verify_oasis_pair.py --deep-learning`: 통과, 전체 18.42초. 원본 24개 파일의 크기와 SHA-256, 4개 기본 영상의 좌표계, 인증된 영상 API, 정합·변형장·라벨 평가를 검사했다.
 - GPU: NVIDIA B200 MIG 1g.45gb, PyTorch 2.7.1+cu128. 모델 실행 7.9초, 입력 160×192×224, 모델 입력 144×160×192. 35개 라벨 모두 지표가 정의됐다.
-- 이 한 쌍의 라벨 평균 Dice: 0.609304 → 0.822300, HD95: 3.577671 → 1.810847mm, ASSD: 1.432871 → 0.633988mm. 원본 라벨은 nearest-neighbor로 변형했다. 수치와 범위는 [실행 결과 JSON](docs/verification/v9-oasis.json)에 보관한다.
-- 실제 NiiVue 0.42.0 화면: 합성 영상 로드, Registration 모델 상태(cuda), Brain/Vessel 분리, Layer Inspector의 키보드 대비 입력과 잘못된 범위 거부, Jet 컬러맵, 창 이동·Reset 확인. 1440×900에서 문서 높이 900px, JS 오류 0. [검증 화면](docs/verification/v9-ui.jpg).
+- 이 한 쌍의 라벨 평균 Dice: 0.609304 → 0.822300, HD95: 3.577671 → 1.810847mm, ASSD: 1.432871 → 0.633988mm. 원본 라벨은 nearest-neighbor로 변형했다. 수치와 범위는 [실행 결과 JSON](verification/v9-oasis.json)에 보관한다.
+- 실제 NiiVue 0.42.0 화면: 합성 영상 로드, Registration 모델 상태(cuda), Brain/Vessel 분리, Layer Inspector의 키보드 대비 입력과 잘못된 범위 거부, Jet 컬러맵, 창 이동·Reset 확인. 1440×900에서 문서 높이 900px, JS 오류 0. [검증 화면](verification/v9-ui.jpg).
 - Python·JavaScript·셸 문법 및 `git diff --check` 통과. `pip check`: No broken requirements found. 검증 환경은 `requirements-runtime.lock`에 기록한다.
 - 추가 제공된 스타일 규격과 ZIP 규격의 차이는 마지막 줄바꿈뿐이었다. 화면 규격 v2.2는 유지했다.
 

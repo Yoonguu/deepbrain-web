@@ -459,7 +459,7 @@ v2.1까지의 `segmentationSection`은 D 섹션 ID로 유지한다. v2.2에서 �
 아래 문장을 수정 요청과 함께 전달한다.
 
 ```
-frontend의 HTML을 수정할 때 DESIGN_STYLE.md v2.2를 기준으로 한다.
+frontend의 HTML을 수정할 때 `docs/DESIGN_STYLE.md` v2.2를 기준으로 한다.
 색상·시간 토큰, 글꼴, 크기, 간격, 레이아웃 grid, 테두리·모서리 값, 메뉴·섹션·아이콘 순서, 요소 ID를 바꾸지 않는다.
 calc(100vh - Npx) 같은 고정 높이 계산식을 쓰지 않는다.
 새 요소는 6장의 컴포넌트만 재사용하고 새 hex 색을 추가하지 않는다. 아이콘은 6.3 규칙의 inline SVG로 직접 그린다.
