@@ -452,10 +452,10 @@ def usage(p:Usage,u=Depends(approved)):
 @app.get('/api/previews')
 def preview_list(u=Depends(approved)):
  folder=FRONT/'previews'
- return sorted(p.name for p in folder.glob('icon-*') if p.suffix in ('.webm','.png') and p.stem in ICON_IDS) if folder.is_dir() else []
+ return sorted(p.name for p in folder.glob('icon-*') if p.suffix in ('.webm','.png','.gif') and p.stem in ICON_IDS) if folder.is_dir() else []
 @app.get('/previews/{filename}')
 def preview(filename:str,u=Depends(approved)):
- if not any(filename==i+ext for i in ICON_IDS for ext in ('.webm','.png')):fail(404,'예시 준비 중')
+ if not any(filename==i+ext for i in ICON_IDS for ext in ('.webm','.png','.gif')):fail(404,'예시 준비 중')
  path=FRONT/'previews'/filename
  if not path.is_file():fail(404,'예시 준비 중')
  return FileResponse(path)
