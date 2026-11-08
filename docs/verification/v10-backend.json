@@ -1,0 +1,10 @@
+{
+  "version": "10.0.0",
+  "status": "passed",
+  "tests": 32,
+  "runtime_s": 15.766,
+  "geometry_checks": 5,
+  "command": "python -m unittest discover -s tests -v",
+  "management_ui_checks": 4,
+  "management_ui_errors": 0
+}

@@ -15,8 +15,16 @@ CREATE TABLE IF NOT EXISTS jobs(id TEXT PRIMARY KEY,department TEXT NOT NULL,pay
 CREATE TABLE IF NOT EXISTS reports(file_id TEXT PRIMARY KEY REFERENCES files(id),body TEXT NOT NULL,version INTEGER NOT NULL);
 CREATE TABLE IF NOT EXISTS report_history(id INTEGER PRIMARY KEY,file_id TEXT,body TEXT,version INTEGER,author TEXT,created REAL);
 CREATE TABLE IF NOT EXISTS notes(id INTEGER PRIMARY KEY,file_id TEXT REFERENCES files(id),author TEXT REFERENCES users(id),body TEXT NOT NULL,created REAL NOT NULL);
+CREATE TABLE IF NOT EXISTS file_access(file_id TEXT PRIMARY KEY REFERENCES files(id),owner_id TEXT,public_demo INTEGER NOT NULL DEFAULT 0);
+CREATE TABLE IF NOT EXISTS file_links(child_id TEXT REFERENCES files(id),parent_id TEXT REFERENCES files(id),role TEXT NOT NULL,PRIMARY KEY(child_id,parent_id,role));
+CREATE TABLE IF NOT EXISTS clinical_sessions(token TEXT PRIMARY KEY REFERENCES sessions(token) ON DELETE CASCADE);
+CREATE TABLE IF NOT EXISTS measurements(id TEXT PRIMARY KEY,file_id TEXT REFERENCES files(id),author TEXT REFERENCES users(id),payload TEXT NOT NULL,created REAL NOT NULL);
 CREATE TABLE IF NOT EXISTS audit(id INTEGER PRIMARY KEY,actor TEXT,action TEXT,object_id TEXT,created REAL);
 ''')
+ # Idempotent legacy migration: preserve public demo access; unknown owners stay admin-only.
+  c.execute("INSERT OR IGNORE INTO file_access SELECT f.id,(SELECT actor FROM audit WHERE object_id=f.id AND action='upload' ORDER BY id LIMIT 1),CASE WHEN f.department='공개 데모' THEN 1 ELSE 0 END FROM files f")
+  c.execute("INSERT OR IGNORE INTO file_links SELECT id,base_id,'source' FROM files WHERE base_id IS NOT NULL")
+  c.execute("UPDATE files SET name='영상-' || substr(id,1,12) || '.nii.gz' WHERE kind='original' AND department!='공개 데모'")
 def recover_jobs():
  with connect() as c:
   c.execute("UPDATE jobs SET payload=json_set(payload,'$.status','failed','$.message','서버 재시작으로 중단','$.error','서버가 재시작되었습니다.') WHERE json_extract(payload,'$.status') IN ('queued','running')")

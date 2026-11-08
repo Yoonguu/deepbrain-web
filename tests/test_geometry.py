@@ -110,6 +110,105 @@ class FlowTest(unittest.TestCase):
         self.assertTrue((geometry.jacobian_determinant(fold) < 0).all())
 
 
+def scipy_edt(target_zero, spacing):
+    from scipy import ndimage
+    return ndimage.distance_transform_edt(target_zero, sampling=spacing)
+
+
+def brute_edt(target_zero, spacing):
+    """0인 voxel까지의 거리를 전수 비교로 계산한다. 작은 배열 테스트 전용."""
+    zeros = np.argwhere(~target_zero) * np.asarray(spacing)
+    coords = np.argwhere(np.ones_like(target_zero)) * np.asarray(spacing)
+    d = np.sqrt(((coords[:, None, :] - zeros[None, :, :]) ** 2).sum(-1)).min(1)
+    return d.reshape(target_zero.shape)
+
+
+def brute_surface(mask):
+    """정의 그대로: 6-이웃 중 하나라도 배경(영상 밖 포함)이면 표면."""
+    out = np.zeros_like(mask, dtype=bool)
+    for idx in np.argwhere(mask):
+        for axis in range(3):
+            for step in (-1, 1):
+                n = idx.copy(); n[axis] += step
+                if n[axis] < 0 or n[axis] >= mask.shape[axis] or not mask[tuple(n)]:
+                    out[tuple(idx)] = True
+    return out
+
+
+def brute_directed(a, b, spacing):
+    sa, sb = np.argwhere(brute_surface(a)) * spacing, np.argwhere(brute_surface(b)) * spacing
+    return np.sqrt(((sa[:, None] - sb[None]) ** 2).sum(-1)).min(1)
+
+
+class SurfaceDistanceTest(unittest.TestCase):
+    def setUp(self):
+        rng = np.random.default_rng(7)
+        self.ref = np.zeros((9, 11, 10), dtype=np.uint8)
+        self.ref[2:7, 3:9, 2:8] = 1
+        self.ref[0:3, 0:2, 0:3] = 2           # 영상 경계에 닿은 label
+        self.pred = self.ref.copy()
+        self.pred[2:7, 4:10, 2:8][self.pred[2:7, 4:10, 2:8] == 0] = 1
+        self.pred[rng.random(self.pred.shape) < 0.05] = 1
+        self.spacing = (2.0, 1.0, 0.5)
+
+    def test_surface_matches_definition(self):
+        for label in (1, 2):
+            np.testing.assert_array_equal(evaluation.surface(self.ref == label), brute_surface(self.ref == label))
+
+    def test_metrics_match_brute_force(self):
+        for edt in (scipy_edt, brute_edt):
+            r = evaluation.SegmentationEvaluator(edt).evaluate(self.pred, self.ref, evaluation.METRICS, self.spacing)
+            for label in ('1', '2'):
+                p, q = self.pred == int(label), self.ref == int(label)
+                pr, rp = brute_directed(p, q, self.spacing), brute_directed(q, p, self.spacing)
+                row = r['per_label'][label]
+                self.assertAlmostEqual(row['hd'], max(pr.max(), rp.max()))
+                self.assertAlmostEqual(row['hd95'], np.percentile(np.concatenate((pr, rp)), 95))
+                self.assertAlmostEqual(row['asd'], pr.mean())
+                self.assertAlmostEqual(row['assd'], np.concatenate((pr, rp)).mean())
+
+    def test_unequal_surfaces_use_pooled_distances(self):
+        pred = np.zeros((3, 3, 5), dtype=np.uint8)
+        ref = pred.copy()
+        pred[1, 1, 1] = 1
+        ref[1, 1, 1:4] = 1
+        evaluator = evaluation.SegmentationEvaluator(scipy_edt)
+        forward = evaluator.evaluate(pred, ref, evaluation.METRICS, (1, 1, 2))['per_label']['1']
+        reverse = evaluator.evaluate(ref, pred, evaluation.METRICS, (1, 1, 2))['per_label']['1']
+        # Directed distances are [0] and [0, 2, 4] mm; pooled values [0, 0, 2, 4].
+        self.assertAlmostEqual(forward['hd'], 4.0)
+        self.assertAlmostEqual(forward['hd95'], 3.7)
+        self.assertAlmostEqual(forward['assd'], 1.5)
+        self.assertAlmostEqual(forward['asd'], 0.0)
+        self.assertAlmostEqual(reverse['asd'], 2.0)
+        self.assertAlmostEqual(reverse['hd95'], forward['hd95'])
+        self.assertAlmostEqual(reverse['assd'], forward['assd'])
+
+    def test_shift_gives_known_distance(self):
+        ref = np.zeros((20, 20, 20), dtype=np.uint8); ref[5:15, 5:15, 5:15] = 1
+        pred = np.roll(ref, 3, axis=2)       # x 방향 3 voxel 이동
+        r = evaluation.SegmentationEvaluator(scipy_edt).evaluate(pred, ref, ['hd', 'dice'], (1.0, 1.0, 1.5))
+        self.assertAlmostEqual(r['per_label']['1']['hd'], 4.5)
+        self.assertAlmostEqual(r['per_label']['1']['dice'], 0.7)
+        self.assertNotIn('asd', r['per_label']['1'])
+
+    def test_identical_is_zero_and_empty_is_undefined(self):
+        r = evaluation.SegmentationEvaluator(scipy_edt).evaluate(self.ref, self.ref, ['hd95', 'assd'])
+        self.assertEqual(r['summary']['hd95']['mean'], 0.0)
+        pred = self.ref.copy(); pred[pred == 2] = 0
+        r = evaluation.SegmentationEvaluator(scipy_edt).evaluate(pred, self.ref, ['dice', 'hd'])
+        self.assertEqual(r['per_label']['2']['dice'], 0.0)
+        self.assertIsNone(r['per_label']['2']['hd'])
+        self.assertIn('예측', r['per_label']['2']['undefined_reason'])
+        self.assertEqual(r['summary']['hd']['defined_labels'], 1)
+
+    def test_rejects_unknown_or_empty_metric_list(self):
+        with self.assertRaises(ValueError):
+            evaluation.SegmentationEvaluator(scipy_edt).evaluate(self.ref, self.ref, [])
+        with self.assertRaises(ValueError):
+            evaluation.SegmentationEvaluator(None).evaluate(self.ref, self.ref, ['hd'])
+
+
 class DiceTest(unittest.TestCase):
     def test_missing_label_counts_as_zero(self):
         ref = np.zeros((4, 4), dtype=np.uint8); ref[0, :2] = 1; ref[3, :2] = 2

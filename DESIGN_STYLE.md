@@ -1,4 +1,4 @@
-# Medical Web Prototype 디자인 스타일 고정 규격 v2
+# Medical Web Prototype 디자인 스타일 고정 규격 v2.2
 
 ## 0. 이 문서의 지위
 
@@ -8,7 +8,7 @@
 |---|---|
 | 변경 허용 | 문서에 정의된 컴포넌트를 재사용한 항목 추가, 문구 수정, JS 로직 수정, 미리보기 영상 파일 추가 |
 | 변경 금지 | 색상 토큰 값, 글꼴, 크기 단계, 간격, 테두리·모서리 규칙, 시간 토큰 값, 요소 ID, 메뉴·섹션·아이콘 순서, 툴팁 타이밍, 방사형 메뉴 기하 수치 |
-| 도입 금지 | CSS 프레임워크, 외부 웹폰트, 외부 아이콘 세트(Font Awesome, Material Icons 등), 상용 소프트웨어의 아이콘·화면 도안, 그림자, 그라디언트, 이모지, 카드형 박스 디자인 |
+| 도입 금지 | CSS 프레임워크, 외부 웹폰트, 외부 아이콘 세트(Font Awesome, Material Icons 등), 상용 소프트웨어의 아이콘·화면 도안, 그림자, 그라디언트, 이모지, 카드형 박스 디자인. 예외는 15장 Layer Inspector의 colormap 막대와 미리보기 canvas 하나뿐이며, 이 색은 장식이 아니라 영상 표시 데이터다 |
 | 파일 구성 | 화면마다 단일 HTML 파일, CSS는 `<style>` 하나, JS는 `<script type="module">` 하나. 아이콘은 HTML 안의 inline SVG로 직접 그린다 |
 
 | 버전 | 변경 |
@@ -16,6 +16,7 @@
 | v1 | 최초 고정. 단일 작업 화면, 애니메이션 금지 |
 | v2 | 애니메이션 허용과 시간 규칙, 상단 메뉴, 화면별 아이콘 그룹, 미리보기 툴팁, 방사형 메뉴, 고정 아이콘, 공개 인증 화면, 표·입력·textarea 컴포넌트, 고정 높이 계산식 폐지 |
 | v2.1 | C2AMorph 실행 상태 표시, Active contour 반복 입력, MIP slab 축 안내 요소 추가. 아이콘 hover 움직임을 선 그리기로 통일 |
+| v2.2 | header 부제 삭제. 메뉴별 섹션 표시(4.4), Segmentation 하위 메뉴 Brain·Vessel, C2AMorph 삭제와 F. Deep Learning 모델 선택, 평가 지표 체크박스, Mask 도구 섹션, 떠 있는 Layer Inspector 창(15장), 아이콘 33개 |
 
 ## 1. 디자인 원칙
 
@@ -70,7 +71,6 @@ easing은 펼침과 나타남에 `ease-out`, 아이콘 반복에 `ease-in-out`�
 |---|---|---|
 | 본문 기본(body) | 14px | line-height 1.45 |
 | header 제목 h1 | 16px | margin 0 |
-| header 부제 span | 12px | `--muted` |
 | 섹션 제목 h2 | 13px | margin 0 0 8px |
 | label, button, select, 상단 메뉴, 표 | 13px | |
 | 툴팁 기능 이름 | 13px | h2와 같은 굵기 |
@@ -103,7 +103,7 @@ font-weight는 따로 지정하지 않는다. h1, h2, 툴팁 기능 이름만 �
 | 영역 | 규칙 |
 |---|---|
 | body | `display: grid; grid-template-rows: auto auto auto 1fr; height: 100vh; overflow: hidden` |
-| header | padding 12px 16px, 하단 1px `--line`, flex baseline, gap 12px |
+| header | padding 12px 16px, 하단 1px `--line`, flex baseline, gap 12px. 제목 h1만 둔다. 기능 목록 부제는 v2.2에서 삭제했다 |
 | 상단 메뉴 | padding 6px 12px, 하단 1px `--line`, flex, gap 4px, 세로 가운데 정렬. 사용자 이름과 로그아웃은 `margin-left: auto`로 오른쪽 끝 |
 | 아이콘 줄 | padding 6px 12px, 하단 1px `--line`, flex, gap 4px, wrap |
 | main | `min-height: 0`, `grid-template-columns: 360px 1fr` |
@@ -127,8 +127,27 @@ font-weight는 따로 지정하지 않는다. h1, h2, 툴팁 기능 이름만 �
 |---|---|---|
 | 공개 인증 | auth.html | header와 로그인·회원가입 폼만 표시. 상단 메뉴, 아이콘 줄, 작업 기능 이름을 포함하지 않는다 |
 | 자료 관리자 | `manager` | 로그인 후 초기 화면. 왼쪽에 자료 분류·업로드·검색·부서 계정·작업 이력, 오른쪽에 자료 표와 소견서·메모 |
-| 작업 화면 | `workspace` | 영상 보기, Registration, Segmentation, 측정·도구 메뉴가 공유하는 화면. 메뉴를 바꾸면 아이콘 줄이 바뀌고 aside가 해당 섹션으로 스크롤된다 |
+| 작업 화면 | `workspace` | 영상 보기, Registration, Segmentation-Brain, Segmentation-Vessel, 측정·도구 메뉴가 공유하는 화면. 메뉴를 바꾸면 아이콘 줄이 바뀌고 aside에는 4.4 표의 섹션만 보인다 |
 | 영상 비교 | `compare` | Fixed·Moving·결과 세 패널 |
+
+### 4.4 메뉴별 섹션
+
+aside의 각 섹션은 `data-menus` 속성에 보일 메뉴 이름을 공백으로 나열한다. 메뉴를 바꾸면 목록에 없는 섹션은 `hidden`이 되고 aside 스크롤은 맨 위로 돌아간다. DOM 순서는 아래 표의 위에서 아래 순서다.
+
+| 섹션 ID | 제목 | 영상 보기 | Registration | Seg-Brain | Seg-Vessel | 측정·도구 |
+|---|---|---|---|---|---|---|
+| `loadSection` | 영상 불러오기 | 표시 | 표시 | 표시 | 표시 | |
+| `registrationSection` | A. Registration (Rigid, Deformable, Overlay) | | 표시 | | | |
+| `dlSection` | F. Deep Learning | | 표시 | | | |
+| `segmentationSection` | D. Vessel enhancement | | | | 표시 | |
+| `regionSection` | E. Region growing | | | 표시 | 표시 | |
+| `maskSection` | Mask 도구 (Threshold, Active contour, Mask 그리기, 보간) | | | 표시 | 표시 | |
+| `evalSection` | 평가 | | 표시 | 표시 | 표시 | |
+| `toolsSection` | 영상 도구 | | | | | 표시 |
+| `layerSection` | Layer Inspector 열기 | | | | | 표시 |
+| `resultSection` | 결과 | 표시 | 표시 | 표시 | 표시 | 표시 |
+
+측정·도구는 영상 불러오기를 두지 않고 현재 열린 Fixed·Moving과 viewer 영상을 대상으로 한다. 대상은 `toolTarget` 한 줄에 표시한다. Registration·Segmentation 섹션의 실행 결과와 거부 사유는 status bar(`statusText`)에, 측정·도구의 사유는 `toolStatus`에 표시한다.
 
 ## 5. 간격과 형태
 
@@ -168,10 +187,15 @@ font-weight는 따로 지정하지 않는다. h1, h2, 툴팁 기능 이름만 �
 | 아이콘 그룹 구분 | 그룹 사이 1px `--line` 세로선, 높이 24px, 좌우 margin 4px |
 | 툴팁 | 7장 |
 | 방사형 메뉴 | 8장 |
+| 하위 메뉴 `.subnav` | 상단 메뉴 안 Segmentation 바로 뒤. 왼쪽 1px `--line`, padding-left 4px, gap 4px. 버튼은 상단 메뉴 버튼과 같다. Segmentation 메뉴일 때만 보인다 |
+| 체크박스 묶음 `fieldset.checks` | 테두리·padding 없음, flex wrap, gap 4px 12px. 항목은 `label.check`(inline-flex, gap 4px). legend는 `.muted` |
+| 평가 표 `#evalTable` | 표 컴포넌트, 11px monospace, 셀 padding 4px 6px. 감싸는 `#evalScroll` 최대 높이 240px, 넘치면 스크롤. 값이 없으면 `정의되지 않음` |
+| 떠 있는 창 `.floating` | 15장 |
+| 탭 `[role=tab]` | 상단 메뉴 버튼과 같은 모양. 선택 탭은 글자 `--accent`, 하단 2px `--accent` |
 
 ### 6.3 아이콘 도안
 
-아이콘은 직접 그린 inline SVG만 쓴다. viewBox `0 0 24 24`, `fill: none`, `stroke: currentColor`, stroke-width 1.5, 선 끝 round. 글자를 넣지 않는다. 대기 상태에서는 정지해 있고, 마우스를 올리거나 키보드 포커스를 받은 동안에만 `--t-icon-loop` 주기로 반복하며, 벗어나면 첫 프레임으로 돌아간다. 움직임은 도안 일부의 이동·회전·선 그리기(stroke-dashoffset)로만 만들고 색은 바꾸지 않는다. v2.1 구현은 30개 모두 선 그리기(`pathLength="1"`, dashoffset 1→0)를 쓴다.
+아이콘은 직접 그린 inline SVG만 쓴다. viewBox `0 0 24 24`, `fill: none`, `stroke: currentColor`, stroke-width 1.5, 선 끝 round. 글자를 넣지 않는다. 대기 상태에서는 정지해 있고, 마우스를 올리거나 키보드 포커스를 받은 동안에만 `--t-icon-loop` 주기로 반복하며, 벗어나면 첫 프레임으로 돌아간다. 움직임은 도안 일부의 이동·회전·선 그리기(stroke-dashoffset)로만 만들고 색은 바꾸지 않는다. v2.2 구현은 33개 모두 선 그리기(`pathLength="1"`, dashoffset 1→0)를 쓴다.
 
 ## 7. 미리보기 툴팁
 
@@ -196,7 +220,7 @@ font-weight는 따로 지정하지 않는다. h1, h2, 툴팁 기능 이름만 �
 | 위치 | 아이콘 줄의 아이콘은 아래쪽 8px, 방사형 메뉴 아이콘은 펼침 방향 바깥쪽 8px. 창 밖으로 나가면 반대쪽으로 뒤집고, 그래도 넘치면 창 안으로 밀어 넣는다 |
 | 나타남 | opacity 0→1, `--t-fade` |
 | 개념 용어 하위 툴팁 | 영상 없이 이름과 설명만, 폭 240px. 하위 툴팁이 열려 있는 동안 상위 툴팁도 유지한다 |
-| 쌓임 순서 | 방사형 메뉴 z-index 900, 툴팁 1000, 하위 툴팁 1001 |
+| 쌓임 순서 | 방사형 메뉴 z-index 900, Layer Inspector 창 950, 툴팁 1000, 하위 툴팁 1001 |
 
 ### 7.2 타이밍
 
@@ -330,7 +354,9 @@ viewer 캔버스(`gl`, `compareFixed`, `compareMoving`, `compareResult`) 위에�
 | 1 | 자료 관리자 | `manager` | `manager` | 없음 |
 | 2 | 영상 보기 | `viewer` | `workspace` | view |
 | 3 | Registration | `registration` | `workspace` | reg |
-| 4 | Segmentation | `segmentation` | `workspace` | seg |
+| 4 | Segmentation | `segmentation` | `workspace` | seg. 누르면 마지막으로 쓴 하위 메뉴(처음은 Brain)로 이동 |
+| 4-1 | Brain | `seg-brain` | `workspace` | seg, Vesselness 제외 |
+| 4-2 | Vessel | `seg-vessel` | `workspace` | seg 전체 |
 | 5 | 측정·도구 | `tools` | `workspace` | tool |
 | 6 | 영상 비교 | `compare` | `compare` | cmp |
 | 7 | 소견서·메모 | `records` | `manager` | 없음 |
@@ -352,7 +378,8 @@ viewer 캔버스(`gl`, `compareFixed`, `compareMoving`, `compareResult`) 위에�
 | reg | `icon-reg-rigid` | Rigid Registration | 어긋난 두 사각형이 맞물림 | `runReg` |
 | reg | `icon-reg-deformable` | Deformable | 휘어진 격자 | `runDeformable` |
 | reg | `icon-reg-overlay` | Overlay | 겹친 두 사각형 | `overlayMoving` |
-| reg | `icon-reg-c2amorph` | C2AMorph | 두 사각형 사이 물결선 | `runC2a` (모델을 쓸 수 없으면 비활성, 조건 블록에 `/api/c2amorph/status`의 사유) |
+| reg | `icon-reg-dl` | Deep Learning | 입력 두 칸에서 출력 한 칸으로 모이는 선 | `runDl` (선택 모델을 쓸 수 없으면 비활성, 조건 블록에 `/api/dl/models`의 사유) |
+| reg | `icon-reg-eval` | 평가 | 막대와 꺾은선 | `runEval` |
 | seg | `icon-seg-vessel` | Vesselness | 가지가 갈라지는 관 | `runVes` |
 | seg | `icon-seg-seed` | Seed 추가 | 핀 | `addSeed` |
 | seg | `icon-seg-region` | Region growing | 점에서 퍼지는 동심원 | `runRg` |
@@ -360,19 +387,21 @@ viewer 캔버스(`gl`, `compareFixed`, `compareMoving`, `compareResult`) 위에�
 | seg | `icon-seg-contour` | Active contour | 점선 폐곡선 | `runContour` |
 | seg | `icon-seg-draw` | Mask 그리기 | 펜 | `drawMask` |
 | seg | `icon-seg-interp` | Slice 보간 | 두 단면 사이 점선 | `runInterpolate` |
-| seg | `icon-seg-dice` | Dice | 겹친 두 원 | `runDice` |
+| seg | `icon-seg-eval` | 평가 | 막대와 꺾은선 | `runEval` |
 | tool | `icon-tool-point` | 측정점 기록 | 점과 작은 십자 | `capturePoint` |
 | tool | `icon-tool-distance` | 거리 | 양 끝점이 있는 선 | `measure` (2점) |
 | tool | `icon-tool-angle` | 각도 | 꺾인 선과 호 | `measure` (3점) |
 | tool | `icon-tool-roi` | ROI | 원 | `measure` (1점) |
 | tool | `icon-tool-mip` | MIP slab | 겹친 단면과 밝은 선 | `runMip` |
 | tool | `icon-tool-modality` | Modality 추가 | 겹친 층과 더하기 | `modalityFile` |
+| tool | `icon-tool-contrast` | Contrast | 축과 S자 곡선 | `openContrast` |
+| tool | `icon-tool-colormap` | Color Map | 칸이 나뉜 막대와 control point 표시 | `openColormap` |
 | cmp | `icon-cmp-load` | 비교 불러오기 | 나란한 세 사각형 | `loadCompare` |
 | cmp | `icon-cmp-slice` | 단면 전환 | 세 방향 화살표 | `compareSlice` 다음 값 |
 | cmp | `icon-cmp-wl` | 비교 Window/Level | 반쪽이 채워진 원 | `compareDrag` = contrast |
 | cmp | `icon-cmp-panzoom` | 비교 Pan / Zoom | 네 방향 화살표와 돋보기 | `compareDrag` = pan |
 
-방사형 메뉴의 후보는 현재 화면에서 쓸 수 있는 그룹의 아이콘 전체다. 작업 화면에서는 view, reg, seg, tool, 영상 비교 화면에서는 cmp와 view다.
+방사형 메뉴의 후보는 현재 화면에서 쓸 수 있는 그룹의 아이콘 전체다. 작업 화면에서는 view, reg, seg, tool, 영상 비교 화면에서는 cmp와 view다. `icon-seg-vessel`은 Seg-Vessel 메뉴에서만 아이콘 줄과 방사형 메뉴에 나온다. 서버는 등록되지 않은 아이콘 id(예: v7의 `icon-reg-c2amorph`, `icon-seg-dice`)를 preferences 응답에서 걸러 낸다.
 
 ## 11. 애니메이션 사용 범위
 
@@ -409,30 +438,98 @@ JS가 아래 ID에 의존하므로 이름 변경과 삭제를 금지한다.
 | 상단 메뉴 | `who`, `logout`, `data-nav` 속성 7개(10.1) |
 | 자료 관리자 | `manager`, `allFiles`, `originalFiles`, `resultFiles`, `demo`, `managerUpload`, `fileSearch`, `searchFiles`, `membersSection`, `memberSearch`, `loadMembers`, `membersList`, `refreshJobs`, `jobList`, `managerStatus`, `managerContent`, `folderPath`, `fileScroll`, `fileRows` |
 | 소견서·메모 | `recordsSection`, `recordName`, `reportText`, `saveReport`, `reloadRecords`, `recordStatus`, `noteText`, `addNote`, `notes`, `history` |
-| 작업 화면 · 영상 불러오기 | `workspace`, `fixedFile`, `movingFile`, `idInfo`, `showFixed`, `showMoving` |
-| A | `registrationSection`, `regMetric`, `regIter`, `runReg` |
+| 작업 화면 · 영상 불러오기 | `workspace`, `workspaceAside`, `loadSection`, `fixedFile`, `movingFile`, `idInfo`, `showFixed`, `showMoving` |
+| 상단 하위 메뉴 | `segSubnav`, `data-nav` 속성 `seg-brain`, `seg-vessel` |
+| A | `registrationSection`, `regMetric`, `regIter`, `runReg`, `runDeformable`, `overlayMoving` |
+| F. Deep Learning | `dlSection`, `dlModel`, `dlInfo`, `dlStatus`, `runDl` |
 | D | `segmentationSection`, `vesTarget`, `vesSigma`, `vesA1`, `vesA2`, `runVes` |
-| E | `rgTarget`, `rgMult`, `rgIter`, `rgRad`, `seedList`, `addSeed`, `clearSeeds`, `runRg` |
-| F, 평가, 결과 | `runC2a`, `c2aStatus`, `runDice`, `resultBox` |
-| 영상 도구 | `toolsSection`, `sliceSelect`, `layoutSelect`, `dragSelect`, `resetView`, `overlayMoving`, `runDeformable`, `modalityFile`, `slabStart`, `slabEnd`, `slabInfo`, `runMip`, `thresholdLow`, `thresholdHigh`, `runThreshold`, `drawMask`, `undoMask`, `saveMask`, `contourIter`, `runContour`, `runInterpolate`, `capturePoint`, `clearPoints`, `pointList`, `roiRadius`, `measure`, `toolStatus` |
+| E | `regionSection`, `rgTarget`, `rgMult`, `rgIter`, `rgRad`, `seedList`, `addSeed`, `clearSeeds`, `runRg` |
+| Mask 도구 | `maskSection`, `thresholdLow`, `thresholdHigh`, `runThreshold`, `contourIter`, `runContour`, `drawMask`, `undoMask`, `saveMask`, `runInterpolate` |
+| 평가, 결과 | `evalSection`, `evalPred`, `evalRef`, `evalMetrics`, `runEval`, `evalScroll`, `evalTable`, `resultSection`, `resultBox` |
+| 영상 도구 | `toolsSection`, `toolTarget`, `sliceSelect`, `layoutSelect`, `dragSelect`, `resetView`, `modalityFile`, `slabStart`, `slabEnd`, `slabInfo`, `runMip`, `capturePoint`, `clearPoints`, `pointList`, `roiRadius`, `measure`, `toolStatus` |
+| Layer Inspector | `layerSection`, `openContrast`, `openColormap`, `openInfo`, `inspector`, `inspectorHead`, `inspectorTitle`, `inspectorClose`, `layerList`, `ctMin`, `ctMax`, `ctLevel`, `ctWindow`, `ctBar`, `ctPlot`, `ctPoint`, `ctX`, `ctY`, `ctAdd`, `ctDel`, `ctReset`, `ctAuto`, `ctBins`, `ctCut`, `ctLog`, `cmPreset`, `cmName`, `cmSave`, `cmRemove`, `cmCanvas`, `cmPlot`, `cmPoint`, `cmPos`, `cmOpacity`, `cmColor`, `cmStyle`, `cmSide`, `cmAdd`, `cmDel`, `cmNan`, `cmNanInfo`, `infoTable`, `inspectorStatus` |
 | viewer | `viewMulti`, `viewRender`, `overlayOpacity`, `location`, `gl`, `progress`, `statusText` |
 | 영상 비교 | `compare`, `loadCompare`, `compareSlice`, `compareDrag`, `compareStatus`, `comparePanels`, `compareFixed`, `compareMoving`, `compareResult` |
-| v2 신규 | `iconBar`(아이콘 줄), `tooltip`, `tooltipNested`, `radialMenu`, `radialLines`(연결선 SVG), 아이콘 id 30개(10.2) |
+| v2 신규 | `iconBar`(아이콘 줄), `tooltip`, `tooltipNested`, `radialMenu`, `radialLines`(연결선 SVG), 아이콘 id 33개(10.2) |
 
-왼쪽 패널 섹션 순서는 v1과 같이 영상 불러오기, A, D, E, F, 평가·Dice, 결과이며, 영상 도구 섹션은 결과 뒤에 둔다.
+v2.1까지의 `segmentationSection`은 D 섹션 ID로 유지한다. v2.2에서 삭제한 ID는 `runC2a`, `c2aStatus`, `runDice`다. 왼쪽 패널 섹션 순서는 4.4 표를 따른다.
 
 ## 14. 수정 요청 시 AI에게 주는 지시문
 
 아래 문장을 수정 요청과 함께 전달한다.
 
 ```
-frontend의 HTML을 수정할 때 DESIGN_STYLE.md v2를 기준으로 한다.
+frontend의 HTML을 수정할 때 DESIGN_STYLE.md v2.2를 기준으로 한다.
 색상·시간 토큰, 글꼴, 크기, 간격, 레이아웃 grid, 테두리·모서리 값, 메뉴·섹션·아이콘 순서, 요소 ID를 바꾸지 않는다.
 calc(100vh - Npx) 같은 고정 높이 계산식을 쓰지 않는다.
 새 요소는 6장의 컴포넌트만 재사용하고 새 hex 색을 추가하지 않는다. 아이콘은 6.3 규칙의 inline SVG로 직접 그린다.
 애니메이션은 11장 표에 있는 것만 쓰고, prefers-reduced-motion에서 끈다.
 툴팁 타이밍(100ms 표시, 1000ms 지연 삭제, 창 이탈 판정 3신호)과 방사형 메뉴 수치(250ms, 5px, 반지름 96/160/224px, 간격 48px)를 바꾸지 않는다.
-CSS 프레임워크, 웹폰트, 외부 아이콘 세트, 그림자, 그라디언트를 도입하지 않는다.
+CSS 프레임워크, 웹폰트, 외부 아이콘 세트, 그림자, 그라디언트를 도입하지 않는다. 예외는 Layer Inspector의 colormap 막대와 미리보기 canvas뿐이다.
+메뉴별 섹션 표시(4.4)와 Layer Inspector 계산 규칙(15장)을 바꾸지 않는다.
 요청받은 기능 범위 밖의 시각 변경을 하지 않는다.
 변경 후 문서와 다른 수치가 있으면 문서 값으로 되돌린다.
 ```
+## 15. Layer Inspector
+
+ITK-SNAP Image Layer Inspector의 Contrast·Color Map·Info 탭을 웹 viewer에 옮긴 떠 있는 창이다. 화면 도안은 따라 하지 않고 항목과 계산 규칙만 따른다.
+
+### 15.1 창
+
+| 항목 | 규칙 |
+|---|---|
+| 형태 | `.floating`: position fixed, z-index 950, 폭 `min(680px, 100vw - 16px)`, 최대 높이 `100vh - 16px`, 넘치면 창 안 스크롤. 배경 `--panel`, 1px `--line`, radius 4px, 그림자 없음 |
+| 열기 | `openContrast`, `openColormap`, `openInfo` 버튼 또는 `icon-tool-contrast`, `icon-tool-colormap`. 영상이 없으면 열지 않고 `toolStatus`에 사유 |
+| 처음 위치 | 오른쪽 16px, 위 120px. 이후에는 마지막 위치 유지 |
+| 이동 | 제목 줄 `inspectorHead`를 끌어 옮긴다. 창 전체가 viewport 안에 남도록 자른다. 창 크기 변경 때도 다시 자른다 |
+| 비모달 | 열린 동안에도 viewer 조작, 메뉴 이동, 우클릭 W/L이 동작한다. `닫기` 버튼으로만 닫는다 |
+| 구조 | 왼쪽 140px layer 목록(오른쪽 1px `--line`), 오른쪽 탭 영역. 860px 이하에서는 위아래로 쌓는다 |
+| layer 목록 | viewer의 volume 순서. 이름은 `역할 · 영상`, 역할은 첫 volume `Main`, 정수형이면서 최대값 255 이하인 volume `Segmentation`, 나머지 `Additional`. 선택 항목은 테두리 `--accent` |
+| 상태 문구 | 탭 아래 `inspectorStatus` 한 줄. 다음 편집이 성공하면 지운다 |
+
+### 15.2 Contrast 탭
+
+| 항목 | 규칙 |
+|---|---|
+| 입력 | Min, Max, Level = (Min + Max) / 2, Window = Max − Min. Level·Window를 고치면 Window·Level을 유지한 채 Min·Max를 다시 계산한다. Max ≤ Min이면 되돌리고 사유를 표시한다 |
+| 그림 | SVG 340×184. 가로축은 영상 전체 밝기 범위(global min~max), histogram 막대는 `--line`, 곡선은 `--accent` 1.5px, 점은 지름 10px 원(선택 점 테두리 `--accent` 2px). 왼쪽 12px colormap 막대 |
+| 곡선 | control point x는 [Min, Max] 안의 정규화 위치, y는 colormap index 0~1. 첫 점 (Min, 0), 끝 점 (Max, 1) 고정. Min 아래는 0, Max 위는 1. 점 사이 선형 보간, x는 증가, y는 감소하지 않게 이웃 점 사이로 자른다. Min·Max가 바뀌면 중간 점은 정규화 위치를 유지한다 |
+| 점 조작 | 중간 점은 끌어서 x·y를 바꾸고, 첫 점과 끝 점은 끌어서 Min·Max를 바꾼다. Point 선택 후 x, y 입력도 같다. `+`는 선택 점과 다음 점의 가운데에 점 추가, `−`는 중간 점 삭제 |
+| Reset · Auto | Reset은 Min·Max를 전체 밝기 범위로, 곡선을 직선으로. Auto는 Min·Max를 1·99 percentile로(4096칸 누적 histogram) |
+| Histogram | Bins 기본 40(2~1024). Cutoff 기본 10%: 막대 높이 상한을 전체 voxel 수의 해당 비율로 둔다. Log 체크 시 log(1 + 개수) 비례 |
+| 우클릭 W/L 동기화 | NiiVue `onIntensityChange`와 `보기 초기화`에서 volume의 cal_min·cal_max를 Min·Max로 다시 읽는다 |
+
+### 15.3 Color Map 탭
+
+| 항목 | 규칙 |
+|---|---|
+| Preset | 기본 Gray, Jet, Hot, Cool과 사용자 preset. 처음 연 layer는 NiiVue에 지정된 colormap을 position k/8(k = 0~8)의 9개 점으로 옮긴 `직접 편집` 상태다. 점을 고치면 `직접 편집`으로 바뀐다 |
+| Jet 정의 | 0: Two-sided, Left (0,0,0, opacity 0), Right (0,0,128, 1). 0.125 (0,0,255), 0.375 (0,255,255), 0.625 (255,255,0), 0.875 (255,0,0), 1 (128,0,0) |
+| Hot · Cool · Gray | Hot 0 검정, 0.375 빨강, 0.75 노랑, 1 흰색. Cool 0 cyan, 1 magenta. Gray 0 검정, 1 흰색 |
+| 저장 | `+`는 이름 칸의 이름으로 서버에 저장, `−`는 선택한 사용자 preset 삭제. 기본 preset 이름은 쓸 수 없다. 사용자당 32개 |
+| 그림 | canvas 340×96에 8px 체크무늬(`--panel`, `--line`)를 깔고 colormap을 opacity 그대로 겹친다. 그 위 SVG에 opacity 선(`--accent`)과 control point 원 |
+| 점 항목 | Point(Index), Position 0~1, Opacity 0~1, Color, Style Regular·Two-sided, Side Left·Right. 첫 점과 끝 점은 Position 고정, 삭제 불가. Regular는 양쪽 색이 같고, Two-sided는 Side에서 고른 쪽만 고친다 |
+| 색 계산 | 두 점 사이는 앞 점의 Right와 뒤 점의 Left를 RGBA 선형 보간 |
+| NaN 색 | NiiVue 0.42는 NaN voxel 색 지정을 지원하지 않는다. NaN 색 입력은 비활성으로 두고 NaN voxel 수와 사유를 표시한다 |
+
+### 15.4 Info 탭
+
+Layer, Size(voxel), Spacing(mm), Origin RAS(mm), Direction(affine 열 정규화, RAS), Data type, 밝기 범위, 표시 범위, NaN voxel 수를 표로 표시한다.
+
+### 15.5 표시 적용
+
+| 단계 | 규칙 |
+|---|---|
+| LUT | 256칸. k = 1~254는 u = k/255에서 곡선 y를 구하고 colormap(y)를 넣는다. k = 0은 Min 이하 값이 쓰는 칸이라 첫 점의 Left 색, k = 255는 Max 이상 값이 쓰는 칸이라 마지막 점의 Right 색 |
+| 등록 | `nv.addColormap('inspector-layer-<index>', {R,G,B,A,I})`, I = 0~255 |
+| 범위 | NVImage는 colormap 지정 시 cal 범위를 다시 계산하므로, colormap 지정 뒤 cal_min = Min, cal_max = Max를 다시 넣고 `updateGLVolume()` |
+| 빈도 | 입력·끌기 변경은 requestAnimationFrame 한 번으로 모아 적용한다 |
+| 유지 | 설정은 volume 이름(영상 id) 기준으로 세션 동안 유지하고, 같은 영상을 다시 불러오면 다시 적용한다 |
+
+### 15.6 Preset API
+
+| Method | Path | 본문·응답 |
+|---|---|---|
+| GET | `/api/preferences/colormaps` | `{"이름": {"points": [...], "nan": [r,g,b,a]}}` |
+| PUT | `/api/preferences/colormaps/{이름}` | `{"points": [{"position": 0, "left": [r,g,b,a], "right": [r,g,b,a], "style": "regular"}, ...], "nan": [0,0,0,0]}`. 점 2~64개, position 0에서 시작해 1에서 끝나고 감소하지 않음, 값 0~255 정수. 응답은 GET과 같음 |
+| DELETE | `/api/preferences/colormaps/{이름}` | 응답은 GET과 같음, 없으면 404 |

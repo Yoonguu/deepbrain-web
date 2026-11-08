@@ -1,0 +1,214 @@
+{
+  "checks": [
+    "Seed-trained ML segmentation runs from UI",
+    "all icon paths reviewed",
+    "no browser exceptions"
+  ],
+  "icons": [
+    {
+      "id": "icon-view-mpr",
+      "status": "real-executed",
+      "operation": null
+    },
+    {
+      "id": "icon-view-3d",
+      "status": "real-executed",
+      "operation": null
+    },
+    {
+      "id": "icon-view-crosshair",
+      "status": "real-executed",
+      "operation": null
+    },
+    {
+      "id": "icon-view-wl",
+      "status": "real-executed",
+      "operation": null
+    },
+    {
+      "id": "icon-view-panzoom",
+      "status": "real-executed",
+      "operation": null
+    },
+    {
+      "id": "icon-view-layout",
+      "status": "real-executed",
+      "operation": null
+    },
+    {
+      "id": "icon-view-enlarge",
+      "status": "real-executed",
+      "operation": null
+    },
+    {
+      "id": "icon-view-restore",
+      "status": "real-executed",
+      "operation": null
+    },
+    {
+      "id": "icon-view-reset",
+      "status": "real-executed",
+      "operation": null
+    },
+    {
+      "id": "icon-reg-rigid",
+      "status": "real-executed",
+      "operation": "registration"
+    },
+    {
+      "id": "icon-reg-deformable",
+      "status": "real-executed",
+      "operation": "deformable"
+    },
+    {
+      "id": "icon-reg-overlay",
+      "status": "real-executed",
+      "operation": null
+    },
+    {
+      "id": "icon-reg-dl",
+      "status": "real-executed",
+      "operation": "deep-learning"
+    },
+    {
+      "id": "icon-reg-eval",
+      "status": "real-executed",
+      "operation": null
+    },
+    {
+      "id": "icon-seg-vessel",
+      "status": "real-executed",
+      "operation": "vessel"
+    },
+    {
+      "id": "icon-seg-seed",
+      "status": "real-executed",
+      "operation": null
+    },
+    {
+      "id": "icon-seg-region",
+      "status": "real-executed",
+      "operation": "region-growing"
+    },
+    {
+      "id": "icon-seg-threshold",
+      "status": "real-executed",
+      "operation": "threshold"
+    },
+    {
+      "id": "icon-seg-contour",
+      "status": "real-executed",
+      "operation": "active-contour"
+    },
+    {
+      "id": "icon-seg-draw",
+      "status": "real-executed",
+      "operation": null
+    },
+    {
+      "id": "icon-seg-erase",
+      "status": "real-executed",
+      "operation": null
+    },
+    {
+      "id": "icon-seg-stop",
+      "status": "real-executed",
+      "operation": null
+    },
+    {
+      "id": "icon-seg-clear",
+      "status": "real-executed",
+      "operation": null
+    },
+    {
+      "id": "icon-seg-interp",
+      "status": "real-executed",
+      "operation": "interpolate"
+    },
+    {
+      "id": "icon-seg-eval",
+      "status": "real-executed",
+      "operation": null
+    },
+    {
+      "id": "icon-tool-point",
+      "status": "real-executed",
+      "operation": null
+    },
+    {
+      "id": "icon-tool-distance",
+      "status": "real-executed",
+      "operation": null
+    },
+    {
+      "id": "icon-tool-angle",
+      "status": "real-executed",
+      "operation": null
+    },
+    {
+      "id": "icon-tool-roi",
+      "status": "real-executed",
+      "operation": null
+    },
+    {
+      "id": "icon-tool-stop",
+      "status": "real-executed",
+      "operation": null
+    },
+    {
+      "id": "icon-tool-mip",
+      "status": "real-executed",
+      "operation": null
+    },
+    {
+      "id": "icon-tool-modality",
+      "status": "real-file-picker"
+    },
+    {
+      "id": "icon-tool-contrast",
+      "status": "real-executed",
+      "operation": null
+    },
+    {
+      "id": "icon-tool-colormap",
+      "status": "real-executed",
+      "operation": null
+    },
+    {
+      "id": "icon-cmp-load",
+      "status": "real-executed",
+      "operation": null
+    },
+    {
+      "id": "icon-cmp-slice",
+      "status": "real-executed",
+      "operation": null
+    },
+    {
+      "id": "icon-cmp-wl",
+      "status": "real-executed",
+      "operation": null
+    },
+    {
+      "id": "icon-cmp-panzoom",
+      "status": "real-executed",
+      "operation": null
+    }
+  ],
+  "errors": [],
+  "status": "passed",
+  "version": "10.0.0",
+  "method": "All 38 actual icon handlers executed without replacing callbacks. Real algorithm jobs produced new results; file picker opened; Seed-trained ML also ran through the UI.",
+  "supplemental_modality_checks": [
+    "actual NIfTI upload",
+    "DB file created",
+    "second image displayed",
+    "added image contrast reset"
+  ],
+  "supplemental_permission_checks": [
+    "management original denied",
+    "management open controls disabled",
+    "clinical original allowed",
+    "return to management denied"
+  ]
+}

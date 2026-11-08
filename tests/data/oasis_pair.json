@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "ubuntu_root": "/data/test-data/oasis-0001-0010",
+  "fixed": "OASIS_OAS1_0001_MR1/aligned_norm.nii.gz",
+  "moving": "OASIS_OAS1_0010_MR1/aligned_norm.nii.gz",
+  "fixed_labels": "OASIS_OAS1_0001_MR1/aligned_seg35.nii.gz",
+  "moving_labels": "OASIS_OAS1_0010_MR1/aligned_seg35.nii.gz",
+  "files": {
+    "OASIS_OAS1_0001_MR1/aligned_norm.nii.gz": {
+      "sha256": "3738fae1a96c49cbca0a0e41d98215fbbf88337e19033c617cd9154e7e647036",
+      "bytes": 2275227
+    },
+    "OASIS_OAS1_0001_MR1/aligned_orig.nii.gz": {
+      "sha256": "f98c3816778212f65b4c07c50494a144bb6101b07f297315211a69ad973da51b",
+      "bytes": 5966625
+    },
+    "OASIS_OAS1_0001_MR1/aligned_seg35.nii.gz": {
+      "sha256": "c711232b44dd14e634cf93d687ec7c5d10a8a8d4e1161f116675cab618c7bc0d",
+      "bytes": 235710
+    },
+    "OASIS_OAS1_0001_MR1/aligned_seg4.nii.gz": {
+      "sha256": "51aaead10c80eba4c7728cfe712292c53a529aca6a42e5174c13c8576fc01476",
+      "bytes": 220982
+    },
+    "OASIS_OAS1_0001_MR1/norm.nii.gz": {
+      "sha256": "5efe70b852c8eed0838ad3eb8f5de7f03fef8b538295b39775ad6a835af8a3aa",
+      "bytes": 2040042
+    },
+    "OASIS_OAS1_0001_MR1/orig.nii.gz": {
+      "sha256": "fa7ffabeb00bab9a258ce6993f4574d082beb06b32019cd1df51d78c4e0b70ff",
+      "bytes": 5438226
+    },
+    "OASIS_OAS1_0001_MR1/seg35.nii.gz": {
+      "sha256": "bc95185a8ab53606c3ac79fdc0f791712c78b2be4b59628a71d00e7b2288b9b6",
+      "bytes": 217141
+    },
+    "OASIS_OAS1_0001_MR1/seg4.nii.gz": {
+      "sha256": "8a95ab862eb41433ce9c1a233dd19ca3370cbd3c451cb3c4d585ff1e865f18fd",
+      "bytes": 199850
+    },
+    "OASIS_OAS1_0001_MR1/slice_norm.nii.gz": {
+      "sha256": "9c884c6e6ef0f43d9dc6b6859b3718b9698d7d99c4b3155b9144a31affc24612",
+      "bytes": 17622
+    },
+    "OASIS_OAS1_0001_MR1/slice_orig.nii.gz": {
+      "sha256": "3da4cb583f159e402f68bd270b0878462c34f58c0b12bd6272534a340804556d",
+      "bytes": 35370
+    },
+    "OASIS_OAS1_0001_MR1/slice_seg24.nii.gz": {
+      "sha256": "caa84debc80fc53962b46d7a3d51ab9c1b1da2f673e922e6df936edc98dfb91c",
+      "bytes": 2038
+    },
+    "OASIS_OAS1_0001_MR1/slice_seg4.nii.gz": {
+      "sha256": "7b317cbc8a3709c93cab9dd4bbb7e69a9e0e0d84f0604e16145872a644e44a42",
+      "bytes": 1864
+    },
+    "OASIS_OAS1_0010_MR1/aligned_norm.nii.gz": {
+      "sha256": "52cf5224eb8a9c24f18f1f7e86d66bc3fe36e93388825f9224422e2094fcdb0d",
+      "bytes": 2385931
+    },
+    "OASIS_OAS1_0010_MR1/aligned_orig.nii.gz": {
+      "sha256": "2cc51c28f641bfc2c8971589796e7ea5c76b26d5c4b8c7ade08bd23c4be214b1",
+      "bytes": 5810185
+    },
+    "OASIS_OAS1_0010_MR1/aligned_seg35.nii.gz": {
+      "sha256": "df737ce5fe01b2d7f66fc3d12610a559ed1305c41bc9a440da126784125a4b25",
+      "bytes": 233100
+    },
+    "OASIS_OAS1_0010_MR1/aligned_seg4.nii.gz": {
+      "sha256": "8c6df75f2afb68cfc1266f4e7e7b23c192cef61658e1678d44e10213e2a44e5a",
+      "bytes": 219293
+    },
+    "OASIS_OAS1_0010_MR1/norm.nii.gz": {
+      "sha256": "9fb1cfc82757faf47540d7f311fd628138474d858e7232b4221255b3739ddc36",
+      "bytes": 2323733
+    },
+    "OASIS_OAS1_0010_MR1/orig.nii.gz": {
+      "sha256": "503390338fedb09dd9f17f2fae1e22e388845e8da185713a924e2438fd2ce335",
+      "bytes": 5900039
+    },
+    "OASIS_OAS1_0010_MR1/seg35.nii.gz": {
+      "sha256": "424faaccb8b5e57fa83a0da964e09173a38136f0313ba22800746328b7f5a488",
+      "bytes": 239678
+    },
+    "OASIS_OAS1_0010_MR1/seg4.nii.gz": {
+      "sha256": "c3fc5a7d62d2c0f47c816577271ad0b8993c19dec753df3c7315cf7b121b964d",
+      "bytes": 221973
+    },
+    "OASIS_OAS1_0010_MR1/slice_norm.nii.gz": {
+      "sha256": "6f025c06585b29683b7624cb56373d71fe905f3ef9d61e292258463bb22423b7",
+      "bytes": 18959
+    },
+    "OASIS_OAS1_0010_MR1/slice_orig.nii.gz": {
+      "sha256": "ae6fa8fd4ad1380ea1afb98e509f869807d979cb46edaa8e502762cc76cfc211",
+      "bytes": 35234
+    },
+    "OASIS_OAS1_0010_MR1/slice_seg24.nii.gz": {
+      "sha256": "57dc62e8a10d752a456fec439256755f57c38b5527b82eff8e1eea81055d15cd",
+      "bytes": 2100
+    },
+    "OASIS_OAS1_0010_MR1/slice_seg4.nii.gz": {
+      "sha256": "8338c9b590c5cd19fb5904a3d04625a0faf7e1c31b7cc8a320dc2730ea25b068",
+      "bytes": 1927
+    }
+  }
+}

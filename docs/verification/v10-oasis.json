@@ -1,0 +1,198 @@
+{
+  "version": "10.0.0",
+  "files": {
+    "OASIS_OAS1_0001_MR1/aligned_norm.nii.gz": {
+      "sha256": "3738fae1a96c49cbca0a0e41d98215fbbf88337e19033c617cd9154e7e647036",
+      "bytes": 2275227
+    },
+    "OASIS_OAS1_0001_MR1/aligned_seg35.nii.gz": {
+      "sha256": "c711232b44dd14e634cf93d687ec7c5d10a8a8d4e1161f116675cab618c7bc0d",
+      "bytes": 235710
+    },
+    "OASIS_OAS1_0010_MR1/aligned_norm.nii.gz": {
+      "sha256": "52cf5224eb8a9c24f18f1f7e86d66bc3fe36e93388825f9224422e2094fcdb0d",
+      "bytes": 2385931
+    },
+    "OASIS_OAS1_0010_MR1/aligned_seg35.nii.gz": {
+      "sha256": "df737ce5fe01b2d7f66fc3d12610a559ed1305c41bc9a440da126784125a4b25",
+      "bytes": 233100
+    }
+  },
+  "checks": [
+    "4 source file sizes and SHA-256 digests",
+    "four finite scalar 3D images share the trained OASIS grid",
+    "authenticated NIfTI download and five real-label metrics",
+    "LFCAMorph API inference, finite warp/field, and warped-label evaluation"
+  ],
+  "geometry": {
+    "size": [
+      160,
+      192,
+      224
+    ],
+    "spacing": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "before_registration": {
+    "dice": {
+      "mean": 0.6093036769959624,
+      "defined_labels": 35,
+      "labels": 35
+    },
+    "hd": {
+      "mean": 8.315115174418686,
+      "defined_labels": 35,
+      "labels": 35
+    },
+    "hd95": {
+      "mean": 3.577671067892772,
+      "defined_labels": 35,
+      "labels": 35
+    },
+    "asd": {
+      "mean": 1.2195568194312014,
+      "defined_labels": 35,
+      "labels": 35
+    },
+    "assd": {
+      "mean": 1.4328714963345976,
+      "defined_labels": 35,
+      "labels": 35
+    }
+  },
+  "models": [
+    {
+      "model_id": "lfcamorph-oasis",
+      "name": "LFCAMorph",
+      "dataset": "OASIS",
+      "description": "LapIRN 계열 3단계 diffeomorphic 정합. OASIS aligned 160×192×224 영상으로 학습.",
+      "available": true,
+      "reason": "",
+      "weights": "MRD_FD_BD_l3_30000.pth",
+      "device": "cuda",
+      "torch": "2.7.1+cu128"
+    },
+    {
+      "model_id": "lfcamorph-lpba40",
+      "name": "LFCAMorph",
+      "dataset": "LPBA40",
+      "description": "LPBA40 학습 가중치 미수신.",
+      "available": false,
+      "reason": "준비 중: LPBA40 학습 가중치 미수신."
+    },
+    {
+      "model_id": "voxelmorph-oasis",
+      "name": "VoxelMorph",
+      "dataset": "OASIS",
+      "description": "가중치와 추론 코드 미수신.",
+      "available": false,
+      "reason": "준비 중: 가중치와 추론 코드 미수신."
+    },
+    {
+      "model_id": "voxelmorph-lpba40",
+      "name": "VoxelMorph",
+      "dataset": "LPBA40",
+      "description": "가중치와 추론 코드 미수신.",
+      "available": false,
+      "reason": "준비 중: 가중치와 추론 코드 미수신."
+    },
+    {
+      "model_id": "hypermorph-oasis",
+      "name": "HyperMorph",
+      "dataset": "OASIS",
+      "description": "가중치와 추론 코드 미수신.",
+      "available": false,
+      "reason": "준비 중: 가중치와 추론 코드 미수신."
+    }
+  ],
+  "deep_learning": {
+    "method": "Deep Learning · LFCAMorph(OASIS)",
+    "model_id": "lfcamorph-oasis",
+    "weights": "MRD_FD_BD_l3_30000.pth (sha256 5ec6f677ae7f)",
+    "device": "cuda",
+    "input_shape_ijk": [
+      160,
+      192,
+      224
+    ],
+    "network_shape": [
+      144,
+      160,
+      192
+    ],
+    "runtime_s": 8.12,
+    "displacement_max_mm": 12.271093544910519,
+    "displacement_mean_mm": 1.6567531188084992,
+    "jacobian_nonpositive_percent": 0.0005231584821428571,
+    "notes": [],
+    "operation": "deep-learning",
+    "parameters": {
+      "fixed_id": "0195c59289d0d8b0162d3ee9caa230fe",
+      "moving_id": "f17d64e28f9539eb20dc94e8a9e1c0af",
+      "image_id": null,
+      "metric": "mattes",
+      "iterations_per_level": 150,
+      "sigma": 0.7,
+      "alpha1": 0.3,
+      "alpha2": 3,
+      "seeds_ras_mm": [],
+      "multiplier": 2.5,
+      "iterations": 4,
+      "radius": 1,
+      "contour_iterations": 300,
+      "start": 0,
+      "end": 10,
+      "lower": 0,
+      "upper": 100,
+      "model_id": "lfcamorph-oasis",
+      "region_method": "confidence",
+      "background_seeds": []
+    },
+    "base_id": "0195c59289d0d8b0162d3ee9caa230fe",
+    "result_id": "334ad909211489d6456eaef665dc81a0",
+    "image_id": "334ad909211489d6456eaef665dc81a0",
+    "name": "deep-learning(lfcamorph-oasis) 결과",
+    "size": [
+      160,
+      192,
+      224
+    ],
+    "spacing": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "after_registration": {
+    "dice": {
+      "mean": 0.8223003312526957,
+      "defined_labels": 35,
+      "labels": 35
+    },
+    "hd": {
+      "mean": 7.296823790818006,
+      "defined_labels": 35,
+      "labels": 35
+    },
+    "hd95": {
+      "mean": 1.8108474947497315,
+      "defined_labels": 35,
+      "labels": 35
+    },
+    "asd": {
+      "mean": 0.5800274659721582,
+      "defined_labels": 35,
+      "labels": 35
+    },
+    "assd": {
+      "mean": 0.6339882111294375,
+      "defined_labels": 35,
+      "labels": 35
+    }
+  },
+  "status": "passed",
+  "runtime_s": 19.41
+}

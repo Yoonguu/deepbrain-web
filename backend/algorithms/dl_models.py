@@ -1,13 +1,14 @@
-"""F: C2AMorph 추론.
+"""Registration Deep Learning 모델 목록과 LFCAMorph 추론.
 
-구현 근거
+모델 목록
+- lfcamorph-oasis: 사용자 제공 LFCAMorph(HMCN) OASIS 학습 가중치 MRD_FD_BD_l3_30000.pth. 실행 가능(torch 필요).
+- 나머지 항목은 가중치를 아직 받지 않아 목록에만 표시하고 실행하지 않는다.
+
+LFCAMorph 구현 근거
 - 구조: LapIRN(Mok & Chung, MICCAI 2020)의 3단계 Laplacian pyramid와 scaling-and-squaring(7단계) diffeomorphic 적분.
-- 가중치와 세부 구조: 사용자 제공 LFCAMorph(HMCN) OASIS 학습 결과 MRD_FD_BD_l3_30000.pth.
-  학습 경로 MRD_FD_BD / MA_bT_m / mid6_2 / S0.1C0.001 / range_flow 0.1과 Test_LFCAMorph_OASIS.py의 설정(concat='e0')을 따른다.
+- 세부 구성: 학습 경로 MRD_FD_BD / MA_bT_m / mid6_2 / S0.1C0.001 / range_flow 0.1과 Test_LFCAMorph_OASIS.py의 설정(concat='e0').
 - 전처리·후처리: Test_LFCAMorph_OASIS.py와 같다. 원 해상도 영상을 144×160×192로 trilinear 축소해 추론하고,
   변형장을 align_corners=True로 원 해상도에 되돌린 뒤 원본 Moving을 warp한다.
-
-torch는 선택 의존성이다. 설치되지 않았으면 status()가 사유를 돌려주고 predict()는 ValueError로 알린다.
 """
 
 from __future__ import annotations
@@ -16,6 +17,7 @@ import hashlib
 import os
 import threading
 import time
+from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
@@ -24,11 +26,40 @@ import SimpleITK as sitk
 from backend.algorithms.common import ProgressCallback, report, validate_scalar_volume
 from backend.algorithms.geometry import displacement_to_physical, jacobian_determinant, unit_flow_to_voxel
 
-MODEL_NAME = "C2AMorph (LapIRN 계열 3단계 diffeomorphic, LFCAMorph OASIS 가중치)"
-DEFAULT_WEIGHTS = Path(__file__).resolve().parent.parent / "models" / "c2amorph" / "MRD_FD_BD_l3_30000.pth"
+MODEL_DIR = Path(__file__).resolve().parent.parent / "models"
+
+
+@dataclass(frozen=True)
+class ModelSpec:
+    model_id: str
+    name: str
+    dataset: str
+    weights_env: str
+    weights_file: str
+    runnable: bool
+    description: str
+
+
+MODELS: dict[str, ModelSpec] = {
+    spec.model_id: spec
+    for spec in (
+        ModelSpec("lfcamorph-oasis", "LFCAMorph", "OASIS", "LFCAMORPH_OASIS_WEIGHTS",
+                  "lfcamorph/MRD_FD_BD_l3_30000.pth", True,
+                  "LapIRN 계열 3단계 diffeomorphic 정합. OASIS aligned 160×192×224 영상으로 학습."),
+        ModelSpec("lfcamorph-lpba40", "LFCAMorph", "LPBA40", "LFCAMORPH_LPBA40_WEIGHTS",
+                  "lfcamorph/lpba40.pth", False, "LPBA40 학습 가중치 미수신."),
+        ModelSpec("voxelmorph-oasis", "VoxelMorph", "OASIS", "VOXELMORPH_OASIS_WEIGHTS",
+                  "voxelmorph/oasis.pth", False, "가중치와 추론 코드 미수신."),
+        ModelSpec("voxelmorph-lpba40", "VoxelMorph", "LPBA40", "VOXELMORPH_LPBA40_WEIGHTS",
+                  "voxelmorph/lpba40.pth", False, "가중치와 추론 코드 미수신."),
+        ModelSpec("hypermorph-oasis", "HyperMorph", "OASIS", "HYPERMORPH_OASIS_WEIGHTS",
+                  "hypermorph/oasis.pth", False, "가중치와 추론 코드 미수신."),
+    )
+}
+
 TRAINED_SHAPE = (160, 192, 224)  # OASIS aligned_norm, nibabel(i, j, k) 순서
 NETWORK_SHAPE = (144, 160, 192)
-CONFIG = dict(
+LFCAMORPH_CONFIG = dict(
     ch_start=6,
     ch_start_magnitude=2,
     n_classes=3,
@@ -48,29 +79,38 @@ _lock = threading.Lock()
 _cache: dict = {}
 
 
-def weights_path() -> Path:
-    return Path(os.getenv("C2AMORPH_WEIGHTS", str(DEFAULT_WEIGHTS)))
+def weights_path(spec: ModelSpec) -> Path:
+    return Path(os.getenv(spec.weights_env, str(MODEL_DIR / spec.weights_file)))
 
 
-def status() -> dict:
+def status(model_id: str) -> dict:
     """torch 설치, 가중치 파일, 장치 상태를 확인한다. 모델은 불러오지 않는다."""
-    path = weights_path()
+    spec = MODELS.get(model_id)
+    if spec is None:
+        return {"model_id": model_id, "available": False, "reason": "등록되지 않은 모델입니다."}
+    base = {"model_id": spec.model_id, "name": spec.name, "dataset": spec.dataset, "description": spec.description}
+    if not spec.runnable:
+        return {**base, "available": False, "reason": "준비 중: " + spec.description}
+    path = weights_path(spec)
     try:
         import torch
     except ImportError:
-        return {"available": False, "reason": "PyTorch가 설치되지 않았습니다. 서버 venv에 torch를 설치하세요.",
-                "weights": path.name}
+        return {**base, "available": False, "reason": "PyTorch가 설치되지 않았습니다. 서버 venv에 torch를 설치하세요."}
     if not path.is_file():
-        return {"available": False, "reason": f"가중치 파일이 없습니다: {path}", "weights": path.name}
+        return {**base, "available": False, "reason": f"가중치 파일이 없습니다: {path.name}"}
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    return {"available": True, "reason": "", "weights": path.name, "device": device, "torch": torch.__version__}
+    return {**base, "available": True, "reason": "", "weights": path.name, "device": device, "torch": torch.__version__}
 
 
-def _build_model(torch, device):
-    from backend.algorithms import c2amorph_net as net
+def catalog() -> list[dict]:
+    return [status(model_id) for model_id in MODELS]
+
+
+def _build_lfcamorph(torch, device, path: Path):
+    from backend.algorithms import lfcamorph_net as net
 
     net.set_device(device)
-    c = CONFIG
+    c = LFCAMORPH_CONFIG
     common = dict(model_name_front=c["model_name_front"], model_name_back=c["model_name_back"],
                   doubleF=c["doubleF"], doubleB=c["doubleB"], batchsize=c["batchsize"], attn=c["attn"],
                   attn_batch=c["attn_batch"], attn_modi_multiple=c["attn_modi_multiple"], concat=c["concat"])
@@ -83,26 +123,27 @@ def _build_model(torch, device):
                              imgshape=shape_2, range_flow=c["range_flow"], model_lvl1=lvl1, **common).to(device)
     model = net.model_diff_l3(2, c["ch_start"], c["ch_start_magnitude"], c["n_classes"], is_train=False,
                               imgshape=shape, range_flow=c["range_flow"], model_lvl2=lvl2, **common).to(device)
-    state = torch.load(str(weights_path()), map_location=device)
+    state = torch.load(str(path), map_location=device, weights_only=True)
     model.load_state_dict(state, strict=True)
     model.eval()
     return model, net
 
 
-def _load():
+def _load(spec: ModelSpec):
     with _lock:
-        if "model" in _cache:
-            return _cache["torch"], _cache["model"], _cache["net"], _cache["device"]
-        info = status()
+        if spec.model_id in _cache:
+            return _cache[spec.model_id]
+        info = status(spec.model_id)
         if not info["available"]:
             raise ValueError(info["reason"])
         import torch
 
         device = torch.device(info["device"])
-        model, net = _build_model(torch, device)
-        digest = hashlib.sha256(weights_path().read_bytes()).hexdigest()[:12]
-        _cache.update(torch=torch, model=model, net=net, device=device, digest=digest)
-        return torch, model, net, device
+        path = weights_path(spec)
+        model, net = _build_lfcamorph(torch, device, path)
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()[:12]
+        _cache[spec.model_id] = (torch, model, net, device, digest)
+        return _cache[spec.model_id]
 
 
 def _minmax(a: np.ndarray) -> np.ndarray:
@@ -112,8 +153,13 @@ def _minmax(a: np.ndarray) -> np.ndarray:
     return (a - lo) / (hi - lo)
 
 
-class C2AMorph:
-    """Moving을 Fixed에 맞추는 diffeomorphic 변형장을 한 번의 추론으로 계산한다."""
+class DeepLearningRegistration:
+    """선택한 학습 모델로 Moving을 Fixed에 맞추는 변형장을 한 번의 추론으로 계산한다."""
+
+    def __init__(self, model_id: str):
+        if model_id not in MODELS:
+            raise ValueError("등록되지 않은 모델입니다.")
+        self.spec = MODELS[model_id]
 
     def predict(
         self,
@@ -124,8 +170,9 @@ class C2AMorph:
         progress: ProgressCallback = None,
     ) -> dict:
         started = time.perf_counter()
-        report(progress, 0.05, "C2AMorph 모델 준비 중")
-        torch, model, net, device = _load()
+        label = f"{self.spec.name}({self.spec.dataset})"
+        report(progress, 0.05, f"{label} 모델 준비 중")
+        torch, model, net, device, digest = _load(self.spec)
         F = torch.nn.functional
 
         report(progress, 0.2, "입력 영상 읽는 중")
@@ -178,8 +225,9 @@ class C2AMorph:
         sitk.WriteImage(field, str(field_path), useCompression=True)
         magnitude = np.linalg.norm(physical, axis=-1)
         return {
-            "method": MODEL_NAME,
-            "weights": f"{weights_path().name} (sha256 {_cache.get('digest', '')})",
+            "method": f"Deep Learning · {label}",
+            "model_id": self.spec.model_id,
+            "weights": f"{weights_path(self.spec).name} (sha256 {digest})",
             "device": device.type,
             "input_shape_ijk": list(shape),
             "network_shape": list(NETWORK_SHAPE),
