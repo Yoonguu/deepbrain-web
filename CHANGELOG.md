@@ -1,5 +1,9 @@
 # 변경 이력
 
+## v10 문서 구조 정리
+
+배포·디자인·버전 기록을 `docs/`로 이동하고 오래된 v2 로그인 계획과 v3 체크리스트를 제거했다. Markdown 내부 링크 검사와 `git diff --check`는 통과했다. 로컬 단위 테스트는 Python 3.9 환경에 `numpy`와 `fastapi`가 없어 수집 단계에서 실행되지 않았다.
+
 ## v10 아이콘 예시 추가
 
 실제 조작 예시 38개의 GIF·VP9 WebM·PNG, 툴팁 재생과 GIF 다운로드, 모션 감소 PNG 대체를 추가한다.
@@ -10,11 +14,11 @@
 
 ## v10.0.0 — 2026-11-08
 
-권한과 자료 소유권, 원본·파생 자료 연결, Registration 3×3 / Segmentation 2×3, 단일 Image 분할, 측정 기록 저장, 공통 초기화와 아이콘 전면 검토를 반영한다. 상세 내용과 제한은 [V10_CHANGES.md](V10_CHANGES.md)를 참조한다.
+권한과 자료 소유권, 원본·파생 자료 연결, Registration 3×3 / Segmentation 2×3, 단일 Image 분할, 측정 기록 저장, 공통 초기화와 아이콘 전면 검토를 반영한다. 상세 내용과 제한은 [V10_CHANGES.md](docs/V10_CHANGES.md)를 참조한다.
 
 ## 9.0.0 — 2026-11-07
 
-사용자 제공 개정 v8을 기반으로 메뉴·Deep Learning·Layer Inspector·평가 기능을 반영한다. HD95/ASSD 정의를 현재 MedPy 구현과 맞추고, OASIS 0001/0010 테스트 쌍과 `/data` 실행 환경을 지정한다. 세부 검증과 변경은 [V9_CHANGES.md](V9_CHANGES.md)에 기록한다. 적용 대상은 GitHub `white`와 Ubuntu `/data`이며 다른 원격 브랜치는 변경하지 않는다.
+사용자 제공 개정 v8을 기반으로 메뉴·Deep Learning·Layer Inspector·평가 기능을 반영한다. HD95/ASSD 정의를 현재 MedPy 구현과 맞추고, OASIS 0001/0010 테스트 쌍과 `/data` 실행 환경을 지정한다. 세부 검증과 변경은 [V9_CHANGES.md](docs/V9_CHANGES.md)에 기록한다. 적용 대상은 GitHub `white`와 Ubuntu `/data`이며 다른 원격 브랜치는 변경하지 않는다.
 
 ## 8.0.0 — 2026-11-07
 
@@ -37,7 +41,7 @@
 
 ## 이전 버전
 
-v7 변경은 [V7_CHANGES.md](V7_CHANGES.md), v4 변경은 [V4_CHANGES.md](V4_CHANGES.md)를 참조한다. 이전 버전의 문서는 가져온 시점의 기록으로 보관한다.
+v7 변경은 [V7_CHANGES.md](docs/V7_CHANGES.md), v4 변경은 [V4_CHANGES.md](docs/V4_CHANGES.md)를 참조한다. 이전 버전의 문서는 가져온 시점의 기록으로 보관한다.
 
 ## v9 외부 채점 자료 추가 — 2026-11-07
 
