@@ -1,7 +1,8 @@
 """Validate the selected OASIS files and run authenticated APIs in a temporary DB.
 
 Run from the project: python scripts/verify_oasis_pair.py --deep-learning
-Research images stay in /data/test-data; this never imports them into the public demo.
+Use --data-root tests/data/oasis --selected-only for the four Git fixtures.
+This validates an isolated temporary database and never imports into the public demo.
 """
 from __future__ import annotations
 
@@ -132,7 +133,7 @@ if __name__ == '__main__':
     parser.add_argument('--deep-learning', action='store_true')
     parser.add_argument('--selected-only', action='store_true',
                         help='Validate only the four Git-distributed grading fixtures')
-    parser.add_argument('--output', default='/data/medical-web-v9/oasis-verification.json')
+    parser.add_argument('--output', default='/data/medical-web-v10/oasis-verification.json')
     args = parser.parse_args()
     result = verify(args)
     output = Path(args.output)

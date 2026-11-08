@@ -43,6 +43,16 @@ def binary_threshold(image: sitk.Image, lower: float, upper: float) -> sitk.Imag
     return sitk.BinaryThreshold(image, lower, upper, 1, 0)
 
 
+def label_threshold(image: sitk.Image, lower: float, upper: float) -> tuple[sitk.Image, dict]:
+    """Label each face-connected component separately for editable region colors."""
+    components = sitk.ConnectedComponent(binary_threshold(image, lower, upper))
+    labels = sitk.RelabelComponent(components, sortByObjectSize=True)
+    count = int(sitk.GetArrayViewFromImage(labels).max())
+    if count > 65535:
+        raise ValueError("영역이 65,535개를 초과합니다. Threshold 범위를 조정하세요.")
+    return labels, {"label_count": count, "label_mode": "connected_components"}
+
+
 def geodesic_active_contour(
     image: sitk.Image,
     seed_ras_mm: list[float],

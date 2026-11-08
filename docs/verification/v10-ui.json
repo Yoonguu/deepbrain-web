@@ -1,0 +1,217 @@
+{
+  "checks": [
+    "registration nine equal panels",
+    "selected Fixed and Moving retained",
+    "real Registration result uses hot colormap",
+    "single Image picker",
+    "real Region Growing from grid Seed",
+    "real threshold returns multiple colored regions",
+    "region color persisted",
+    "draw active",
+    "eraser separate and active",
+    "clear mask",
+    "mask undo restores labels",
+    "mask exit returns to grid",
+    "distance starts without pre-recorded points",
+    "distance live preview after first click",
+    "distance saved on second click",
+    "crossing distances show angle",
+    "three-point angle saved",
+    "ROI saved",
+    "reset restores original contrast and colormap",
+    "measurements reload from database",
+    "comparison loads three linked images",
+    "modality icon opens file picker",
+    "all icon paths reviewed",
+    "no browser exceptions"
+  ],
+  "icons": [
+    {
+      "id": "icon-view-mpr",
+      "status": "dispatched",
+      "target": "viewMulti"
+    },
+    {
+      "id": "icon-view-3d",
+      "status": "dispatched",
+      "target": "viewRender"
+    },
+    {
+      "id": "icon-view-crosshair",
+      "status": "executed"
+    },
+    {
+      "id": "icon-view-wl",
+      "status": "executed"
+    },
+    {
+      "id": "icon-view-panzoom",
+      "status": "executed"
+    },
+    {
+      "id": "icon-view-layout",
+      "status": "executed"
+    },
+    {
+      "id": "icon-view-enlarge",
+      "status": "executed"
+    },
+    {
+      "id": "icon-view-restore",
+      "status": "dispatched",
+      "target": "viewMulti"
+    },
+    {
+      "id": "icon-view-reset",
+      "status": "dispatched",
+      "target": "resetView"
+    },
+    {
+      "id": "icon-reg-rigid",
+      "status": "dispatched",
+      "target": "runReg"
+    },
+    {
+      "id": "icon-reg-deformable",
+      "status": "dispatched",
+      "target": "runDeformable"
+    },
+    {
+      "id": "icon-reg-overlay",
+      "status": "dispatched",
+      "target": "overlayMoving"
+    },
+    {
+      "id": "icon-reg-dl",
+      "status": "dispatched",
+      "target": "runDl"
+    },
+    {
+      "id": "icon-reg-eval",
+      "status": "dispatched",
+      "target": "runEval"
+    },
+    {
+      "id": "icon-seg-vessel",
+      "status": "dispatched",
+      "target": "runVes"
+    },
+    {
+      "id": "icon-seg-seed",
+      "status": "dispatched",
+      "target": "addSeed"
+    },
+    {
+      "id": "icon-seg-region",
+      "status": "dispatched",
+      "target": "runRg"
+    },
+    {
+      "id": "icon-seg-threshold",
+      "status": "dispatched",
+      "target": "runThreshold"
+    },
+    {
+      "id": "icon-seg-contour",
+      "status": "dispatched",
+      "target": "runContour"
+    },
+    {
+      "id": "icon-seg-draw",
+      "status": "dispatched",
+      "target": "drawMask"
+    },
+    {
+      "id": "icon-seg-erase",
+      "status": "dispatched",
+      "target": "eraseMask"
+    },
+    {
+      "id": "icon-seg-stop",
+      "status": "dispatched",
+      "target": "stopMask"
+    },
+    {
+      "id": "icon-seg-clear",
+      "status": "dispatched",
+      "target": "clearMask"
+    },
+    {
+      "id": "icon-seg-interp",
+      "status": "dispatched",
+      "target": "runInterpolate"
+    },
+    {
+      "id": "icon-seg-eval",
+      "status": "dispatched",
+      "target": "runEval"
+    },
+    {
+      "id": "icon-tool-point",
+      "status": "dispatched",
+      "target": "capturePoint"
+    },
+    {
+      "id": "icon-tool-distance",
+      "status": "dispatched",
+      "target": "distanceMode"
+    },
+    {
+      "id": "icon-tool-angle",
+      "status": "dispatched",
+      "target": "angleMode"
+    },
+    {
+      "id": "icon-tool-roi",
+      "status": "dispatched",
+      "target": "roiMode"
+    },
+    {
+      "id": "icon-tool-stop",
+      "status": "dispatched",
+      "target": "stopMeasure"
+    },
+    {
+      "id": "icon-tool-mip",
+      "status": "dispatched",
+      "target": "runMip"
+    },
+    {
+      "id": "icon-tool-modality",
+      "status": "file-picker",
+      "target": "modalityFile"
+    },
+    {
+      "id": "icon-tool-contrast",
+      "status": "dispatched",
+      "target": "openContrast"
+    },
+    {
+      "id": "icon-tool-colormap",
+      "status": "dispatched",
+      "target": "openColormap"
+    },
+    {
+      "id": "icon-cmp-load",
+      "status": "dispatched",
+      "target": "loadCompare"
+    },
+    {
+      "id": "icon-cmp-slice",
+      "status": "executed"
+    },
+    {
+      "id": "icon-cmp-wl",
+      "status": "executed"
+    },
+    {
+      "id": "icon-cmp-panzoom",
+      "status": "executed"
+    }
+  ],
+  "errors": [],
+  "status": "passed",
+  "version": "10.0.0",
+  "date": "2026-11-08",
+  "method": "Actual NiiVue/FastAPI workflow; target callbacks stubbed only for exhaustive icon dispatch. Backend and OASIS checks verify actual algorithms."
+}

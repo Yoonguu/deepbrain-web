@@ -124,21 +124,50 @@ def approve(uid:str,p:Approval,u=Depends(approved)):
   if not cur.rowcount: fail(404,'계정을 찾을 수 없습니다.')
   c.execute('DELETE FROM sessions WHERE user_id=?',(uid,))
  store.audit(u['id'],'membership_changed',uid); return {'ok':True}
+@app.get('/assets/workspace.js')
+def workspace_asset(u=Depends(approved)):
+ return FileResponse(FRONT/'workspace.js',media_type='text/javascript')
+
 def file_for(fid,u):
  with store.connect() as c: row=c.execute('SELECT * FROM files WHERE id=? AND department=? AND deleted=0',(fid,u['department'])).fetchone()
  if not row: fail(404,'접근할 수 없는 자료입니다.')
- return dict(row)
+ with store.connect() as c: access=c.execute('SELECT * FROM file_access WHERE file_id=?',(fid,)).fetchone()
+ if u['role']!='head' and (not access or (access['owner_id']!=u['id'] and not access['public_demo'])): fail(404,'접근할 수 없는 자료입니다.')
+ return dict(row,owner_id=access['owner_id'] if access else None,can_delete=u['role']=='head' or bool(access and access['owner_id']==u['id']))
 def path_for(fid,u): file_for(fid,u); return IMAGES/(fid+'.nii.gz')
-def add_file(fid,u,name,kind='original',base=None):
+def add_file(fid,u,name,kind='original',base=None,parents=None):
  img=sitk.ReadImage(str(IMAGES/(fid+'.nii.gz')))
  meta={'size':list(img.GetSize()),'spacing':list(img.GetSpacing())}
- with store.connect() as c: c.execute('INSERT INTO files VALUES(?,?,?,?,?,?,?,0)',(fid,u['department'],name,kind,base,json.dumps(meta),time.time()))
+ if kind=='original' and u['department']!='공개 데모': name='영상-'+fid[:12]+'.nii.gz'
+ with store.connect() as c:
+  c.execute('INSERT INTO files VALUES(?,?,?,?,?,?,?,0)',(fid,u['department'],name,kind,base,json.dumps(meta),time.time()))
+  c.execute('INSERT INTO file_access VALUES(?,?,?)',(fid,u['id'],int(u['department']=='공개 데모')))
+  for role,parent in (parents or ({'source':base} if base else {})).items():
+   if parent: c.execute('INSERT OR IGNORE INTO file_links VALUES(?,?,?)',(fid,parent,role))
  return dict(image_id=fid,name=name,**meta)
 @app.get('/api/files')
 def files(q:str='',u=Depends(approved)):
- with store.connect() as c: return [dict(r) for r in c.execute('SELECT * FROM files WHERE department=? AND deleted=0 AND name LIKE ? ORDER BY created DESC',(u['department'],'%'+q[:100]+'%'))]
+ with store.connect() as c:
+  rows=c.execute('SELECT f.* FROM files f LEFT JOIN file_access a ON a.file_id=f.id WHERE f.department=? AND f.deleted=0 AND f.name LIKE ? AND (? OR a.owner_id=? OR a.public_demo=1) ORDER BY f.created DESC',(u['department'],'%'+q[:100]+'%',u['role']=='head',u['id'])).fetchall()
+  result=[]
+  for row in rows:
+   item=file_for(row['id'],u)
+   item['parents']=[dict(link) for link in c.execute('SELECT parent_id,role FROM file_links WHERE child_id=?',(row['id'],))]
+   result.append(item)
+  return result
+class LabelColors(BaseModel): colors:dict[str,str]=Field(max_length=4096)
+@app.put('/api/files/{fid}/colors')
+def save_label_colors(fid:str,p:LabelColors,u=Depends(approved)):
+ row=file_for(fid,u)
+ if not row['can_delete']: fail(403,'본인 자료 또는 관리 권한이 필요합니다.')
+ import re
+ if any(not key.isdecimal() or not 1<=int(key)<=65535 or not re.fullmatch(r'#[0-9a-fA-F]{6}',color) for key,color in p.colors.items()): fail(400,'유효한 영역 번호와 색상을 입력하세요.')
+ metadata=json.loads(row['metadata']);metadata['label_colors']=p.colors
+ with store.connect() as c: c.execute('UPDATE files SET metadata=? WHERE id=?',(json.dumps(metadata),fid))
+ return {'colors':p.colors}
 @app.post('/api/images')
-async def upload(req:Request,name:str='image.nii.gz',u=Depends(approved)):
+async def upload(req:Request,name:str='image.nii.gz',base_id:str|None=None,u=Depends(approved)):
+ if base_id: file_for(base_id,u)
  if not name.lower().endswith(('.nii','.nii.gz')): fail(400,'NIfTI(.nii, .nii.gz) 파일을 선택하세요.')
  fid=secrets.token_hex(16); temp=IMAGES/(fid+('.upload.nii.gz' if name.lower().endswith('.gz') else '.upload.nii')); size=0
  try:
@@ -153,21 +182,23 @@ async def upload(req:Request,name:str='image.nii.gz',u=Depends(approved)):
  except HTTPException: raise
  except Exception: fail(400,'영상 파일을 읽을 수 없습니다.')
  finally: temp.unlink(missing_ok=True)
- r=add_file(fid,u,Path(name).name[:160]); store.audit(u['id'],'upload',fid); return r
+ r=add_file(fid,u,Path(name).name[:160],'result' if base_id else 'original',base_id); store.audit(u['id'],'upload',fid); return r
 @app.post('/api/demo')
 def demo(u=Depends(approved)):
- z,y,x=np.mgrid[:48,:48,:48]; arr=(100*np.exp(-((x-24)**2+(y-24)**2+(z-24)**2)/200)).astype('float32')
- img=sitk.GetImageFromArray(arr); img.SetSpacing((1.2,1.2,2.0)); fid=secrets.token_hex(16); sitk.WriteImage(img,str(IMAGES/(fid+'.nii.gz')))
- return add_file(fid,u,'합성 테스트 영상 — 실제 MRI 아님')
+ fail(403,'합성 영상 추가는 비활성화되어 있습니다.')
 @app.get('/api/images/{fid}.nii.gz')
 def image(fid:str,u=Depends(approved)):
  p=path_for(fid,u); store.audit(u['id'],'read_image',fid); return FileResponse(p,media_type='application/gzip')
 @app.delete('/api/files/{fid}')
 def delete(fid:str,u=Depends(approved)):
- file_for(fid,u)
- if u['role']!='head': fail(403,'삭제 권한이 없습니다. 해당 부서장만 삭제할 수 있습니다.')
+ row=file_for(fid,u)
+ if u['role']!='head':
+  with store.connect() as c:
+   conflict=c.execute('WITH RECURSIVE descendants(id) AS (SELECT ? UNION SELECT l.child_id FROM file_links l JOIN descendants d ON l.parent_id=d.id) SELECT f.id FROM descendants d JOIN files f ON f.id=d.id LEFT JOIN file_access a ON a.file_id=f.id WHERE f.deleted=0 AND (a.owner_id IS NULL OR a.owner_id!=?) LIMIT 1',(fid,u['id'])).fetchone()
+  if conflict: fail(403,'다른 작성자의 파생 자료가 연결되어 있습니다. 관리자에게 삭제를 요청하세요.')
+ if not row['can_delete']: fail(403,'본인 자료 또는 관리 권한이 필요합니다.')
  with store.connect() as c:
-  c.execute('WITH RECURSIVE descendants(id) AS (SELECT id FROM files WHERE id=? AND department=? UNION SELECT f.id FROM files f JOIN descendants d ON f.base_id=d.id WHERE f.department=?) UPDATE files SET deleted=1 WHERE id IN (SELECT id FROM descendants)',(fid,u['department'],u['department']))
+  c.execute('WITH RECURSIVE descendants(id) AS (SELECT id FROM files WHERE id=? AND department=? UNION SELECT f.id FROM files f JOIN file_links l ON l.child_id=f.id JOIN descendants d ON l.parent_id=d.id WHERE f.department=?) UPDATE files SET deleted=1 WHERE id IN (SELECT id FROM descendants)',(fid,u['department'],u['department']))
  store.audit(u['id'],'soft_delete',fid); return {'ok':True}
 @app.get('/api/trash')
 def trash(u=Depends(approved)):
@@ -178,10 +209,13 @@ def trash(u=Depends(approved)):
 def purge(fid:str,u=Depends(approved)):
  if u['role']!='head': fail(403,'부서장만 영구 삭제할 수 있습니다.')
  with store.connect() as c:
-  rows=c.execute('WITH RECURSIVE descendants(id) AS (SELECT id FROM files WHERE id=? AND department=? AND deleted=1 UNION SELECT f.id FROM files f JOIN descendants d ON f.base_id=d.id WHERE f.department=? AND f.deleted=1) SELECT id FROM descendants',(fid,u['department'],u['department'])).fetchall()
+  rows=c.execute('WITH RECURSIVE descendants(id) AS (SELECT id FROM files WHERE id=? AND department=? AND deleted=1 UNION SELECT f.id FROM files f JOIN file_links l ON l.child_id=f.id JOIN descendants d ON l.parent_id=d.id WHERE f.department=? AND f.deleted=1) SELECT id FROM descendants',(fid,u['department'],u['department'])).fetchall()
   ids=[r['id'] for r in rows]
   if not ids: fail(404,'삭제 목록에서 자료를 찾을 수 없습니다.')
   for item in ids:
+   c.execute('DELETE FROM file_links WHERE child_id=? OR parent_id=?',(item,item))
+   c.execute('DELETE FROM file_access WHERE file_id=?',(item,))
+   c.execute('DELETE FROM measurements WHERE file_id=?',(item,))
    c.execute('DELETE FROM notes WHERE file_id=?',(item,))
    c.execute('DELETE FROM report_history WHERE file_id=?',(item,))
    c.execute('DELETE FROM reports WHERE file_id=?',(item,))
@@ -233,7 +267,9 @@ def put_job(j,u):
 def job(jid:str,u=Depends(approved)):
  with store.connect() as c: row=c.execute('SELECT payload FROM jobs WHERE id=? AND department=?',(jid,u['department'])).fetchone()
  if not row: fail(404,'접근할 수 없는 작업입니다.')
- return json.loads(row['payload'])
+ result=json.loads(row['payload'])
+ if u['role']!='head' and result.get('owner_id')!=u['id']: fail(404,'접근할 수 없는 작업입니다.')
+ return result
 @app.post('/api/{kind}')
 def run(kind:str,p:Operation,u=Depends(approved)):
  pair=('registration','deformable','deep-learning')
@@ -245,7 +281,7 @@ def run(kind:str,p:Operation,u=Depends(approved)):
  base=p.fixed_id if kind in pair else p.image_id
  inp=path_for(base,u); moving=path_for(p.moving_id,u) if kind in pair else None
  fid=secrets.token_hex(16); out=IMAGES/(fid+'.nii.gz'); jid=secrets.token_hex(16)
- j={'job_id':jid,'kind':kind,'status':'queued','progress':0,'message':'대기 중'}; put_job(j,u)
+ j={'job_id':jid,'kind':kind,'status':'queued','progress':0,'message':'대기 중','owner_id':u['id']}; put_job(j,u)
  def progress(f,msg): j.update(progress=f,message=msg); put_job(j,u)
  def work():
   try:
@@ -258,14 +294,16 @@ def run(kind:str,p:Operation,u=Depends(approved)):
    else:
     image=sitk.ReadImage(str(inp),sitk.sitkFloat32); result={}
     if kind=='mip': image,result=classic.maximum_intensity_projection(image,p.start,p.end)
-    elif kind=='threshold': image=classic.binary_threshold(image,p.lower,p.upper)
+    elif kind=='threshold': image,result=classic.label_threshold(image,p.lower,p.upper)
     elif kind=='active-contour':
      if not p.seeds_ras_mm: raise ValueError('Seed를 추가하세요.')
      image,result=classic.geodesic_active_contour(image,p.seeds_ras_mm[0],p.radius,p.contour_iterations,progress)
     else: image,result=classic.interpolate_axial_mask(image)
     sitk.WriteImage(image,str(out))
    file_for(base,u)
-   meta=add_file(fid,u,(f'deep-learning({p.model_id})' if kind=='deep-learning' else kind)+' 결과','result',base); result.update(base_id=base,result_id=fid,**meta)
+   meta=add_file(fid,u,(f'deep-learning({p.model_id})' if kind=='deep-learning' else kind)+' 결과','result',base,{'fixed':base,'moving':p.moving_id} if kind in pair else {'source':base}); result['operation']=kind; result['parameters']=p.model_dump(); result.update(base_id=base,result_id=fid,**meta)
+   with store.connect() as c:
+    stored=json.loads(c.execute('SELECT metadata FROM files WHERE id=?',(fid,)).fetchone()['metadata']);stored.update(operation=kind,parameters=p.model_dump(),label_count=result.get('label_count',1));c.execute('UPDATE files SET metadata=? WHERE id=?',(json.dumps(stored),fid))
    j.update(status='done',result=result,progress=1,message='완료')
   except Exception as exc:
    logging.exception('Processing failed')
@@ -283,6 +321,7 @@ def measure(p:Measure,u=Depends(approved)):
  if len(pts)>=2: result['distance_mm']=float(np.linalg.norm(pts[1]-pts[0]))
  if len(pts)==3:
   a,b=pts[0]-pts[1],pts[2]-pts[1]; den=np.linalg.norm(a)*np.linalg.norm(b)
+  if not den: fail(400,'각도를 이루는 서로 다른 세 점을 선택하세요.')
   if den: result['angle_degrees']=float(np.degrees(np.arccos(np.clip(a@b/den,-1,1))))
  try: center=ConfidenceConnectedSegmentation._seed_index(im,p.points[0])
  except ValueError: fail(400,'영상 안의 지점을 선택하세요.')
@@ -290,6 +329,24 @@ def measure(p:Measure,u=Depends(approved)):
  roi=((xx-center[0])*sx)**2+((yy-center[1])*sy)**2+((zz-center[2])*sz)**2<=p.radius**2
  vals=arr[roi]; result.update(roi_shape='sphere',roi_radius_mm=p.radius,roi_mean=float(vals.mean()),roi_std=float(vals.std()),roi_volume_mm3=float(roi.sum()*sx*sy*sz),nonzero_volume_mm3=float(np.count_nonzero(arr)*sx*sy*sz))
  return result
+
+class MeasurementRecord(BaseModel):
+ mode:str=Field(pattern='^(distance|angle|roi)$')
+ points:list[Annotated[list[float],Field(min_length=3,max_length=3)]]=Field(min_length=1,max_length=3)
+ radius:float=Field(5,gt=0,le=100)
+@app.get('/api/measurements/{fid}')
+def measurement_records(fid:str,u=Depends(approved)):
+ file_for(fid,u)
+ with store.connect() as c:
+  return [dict(id=r['id'],author=r['author'],**json.loads(r['payload'])) for r in c.execute('SELECT * FROM measurements WHERE file_id=? ORDER BY created',(fid,))]
+@app.post('/api/measurements/{fid}')
+def save_measurement(fid:str,p:MeasurementRecord,u=Depends(approved)):
+ expected={'distance':2,'angle':3,'roi':1}[p.mode]
+ if len(p.points)!=expected: fail(400,'측정 종류와 점 개수가 일치하지 않습니다.')
+ result=measure(Measure(image_id=fid,points=p.points,radius=p.radius),u)
+ mid=secrets.token_hex(16); payload={**p.model_dump(),'result':result}
+ with store.connect() as c: c.execute('INSERT INTO measurements VALUES(?,?,?,?,?)',(mid,fid,u['id'],json.dumps(payload),time.time()))
+ return dict(id=mid,author=u['id'],**payload)
 
 def distance_transform(target_zero,spacing):
  """target_zero가 0인 voxel까지의 Euclidean 거리(mm). scipy가 있으면 exact EDT, 없으면 SimpleITK Maurer."""
@@ -343,9 +400,10 @@ def axial_info(fid:str,u=Depends(approved)):
 @app.get('/api/jobs')
 def jobs(u=Depends(approved)):
  with store.connect() as c:
-  return [json.loads(r['payload']) for r in c.execute('SELECT payload FROM jobs WHERE department=? ORDER BY rowid DESC LIMIT 100',(u['department'],))]
+  rows=[json.loads(r['payload']) for r in c.execute('SELECT payload FROM jobs WHERE department=? ORDER BY rowid DESC LIMIT 100',(u['department'],))]
+  return [r for r in rows if u['role']=='head' or r.get('owner_id')==u['id']]
 
-ICON_IDS=set(('icon-'+g+'-'+n) for g,names in {'view':'mpr 3d crosshair wl panzoom layout enlarge reset','reg':'rigid deformable overlay dl eval','seg':'vessel seed region threshold contour draw interp eval','tool':'point distance angle roi mip modality contrast colormap','cmp':'load slice wl panzoom'}.items() for n in names.split())
+ICON_IDS=set(('icon-'+g+'-'+n) for g,names in {'view':'mpr 3d crosshair wl panzoom layout enlarge restore reset','reg':'rigid deformable overlay dl eval','seg':'vessel seed region threshold contour draw erase stop clear interp eval','tool':'point distance angle roi stop mip modality contrast colormap','cmp':'load slice wl panzoom'}.items() for n in names.split())
 with store.connect() as c:
  c.execute('CREATE TABLE IF NOT EXISTS preferences(user_id TEXT PRIMARY KEY REFERENCES users(id),pinned TEXT NOT NULL DEFAULT \'[]\',usage TEXT NOT NULL DEFAULT \'{}\')')
 @app.get('/api/preferences')
