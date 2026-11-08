@@ -118,3 +118,15 @@ class V10(base.Workflow):
   job=self.wait(owner,owner.post('/api/region-growing',json=payload).json()['job_id'])
   self.assertEqual(job['status'],'done',job)
   result=job['result'];self.assertLess(result['final_loss'],result['initial_loss']);self.assertGreater(result['foreground_voxels'],0);self.assertFalse(result['pretrained'])
+
+ def test_all_icon_preview_assets(self):
+  from backend.app import ICON_IDS,FRONT
+  head=self.client('preview-review@example.invalid','PreviewReview','head')
+  expected={identity+suffix for identity in ICON_IDS for suffix in ['.webm','.png','.gif']}
+  listed=set(head.get('/api/previews').json());self.assertEqual(listed,expected)
+  for identity in ICON_IDS:
+   for suffix in ['.webm','.png','.gif']:
+    path=FRONT/'previews'/(identity+suffix);self.assertTrue(path.is_file());self.assertLess(path.stat().st_size,1024*1024)
+  for suffix,signature in [('.gif',b'GIF'),('.png',b'\x89PNG'),('.webm',b'\x1aE\xdf\xa3')]:
+   response=head.get('/previews/icon-view-mpr'+suffix);self.assertEqual(response.status_code,200);self.assertTrue(response.content.startswith(signature))
+  self.assertEqual(head.get('/previews/not-an-icon.gif').status_code,404)

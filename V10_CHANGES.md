@@ -59,3 +59,10 @@ node tests/ui/v10_geometry.mjs
 - 최신 추가 검증: backend 32개 통과(15.766초), 실제 아이콘 38개 실행과 Seed 학습 분할 통과, 브라우저 예외 0개. OASIS GPU 및 실제 라벨 평가 검증 통과(19.41초).
 
 - Modality 아이콘은 파일 창 표시뿐 아니라 실제 NIfTI 업로드→DB 등록→두 번째 영상 표시→추가 영상 contrast 초기화까지 확인했다. 초기 로딩 중 미완성 제어기에 접근하지 않도록 준비 완료 후 자료 열기 버튼을 활성화한다.
+
+
+아이콘 예시 38개를 실제 앱에서 촬영했다. `frontend/previews`에 GIF·VP9 WebM·PNG가 각각 38개 있으며, 툴팁에서 재생하고 GIF를 내려받을 수 있다. 상세 제작 규격은 [예시 안내](frontend/previews/README.md), 무결성과 검증 기록은 `docs/verification/v10-previews.json`을 참조한다. 모션 감소 설정에서는 PNG를 사용한다.
+
+예시 연결 검증 중 확인한 빈 Segmentation 화면의 null 결과 처리와 MIP 결과 로드 시 단면 중심·확대 초기화도 보완했다.
+
+예시 파일 관련 검증을 포함한 backend 33개 테스트 통과(15.725초). 실제 브라우저에서 WebM 38개 재생, GIF 다운로드, 모션 감소 PNG 표시, 예외 0개를 확인했다.
